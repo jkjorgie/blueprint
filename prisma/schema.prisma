@@ -1,0 +1,87 @@
+// Blueprint data model.
+// Analyst-built applications never change this schema: their field definitions
+// live in Application.schema (JSON) and their end-user data lives in
+// DataRecord.data (JSONB). Run `npm run db:migrate` after editing this file.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  ANALYST
+  END_USER
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         Role     @default(END_USER)
+  active       Boolean  @default(true)
+
+  // For END_USER accounts: the analyst who created and manages this account.
+  // Null for admins and analysts.
+  managedById  String?
+  managedBy    User?    @relation("ManagedUsers", fields: [managedById], references: [id])
+  managedUsers User[]   @relation("ManagedUsers")
+
+  applications Application[]
+  memberships  AppMembership[]
+  records      DataRecord[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Application {
+  id          String  @id @default(cuid())
+  ownerId     String
+  owner       User    @relation(fields: [ownerId], references: [id])
+  name        String
+  slug        String
+  description String?
+
+  // The analyst's field definitions. Shape is enforced by src/lib/schema/app-schema.ts.
+  schema    Json
+  published Boolean @default(false)
+
+  members AppMembership[]
+  records DataRecord[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([ownerId, slug])
+}
+
+// Grants an end user access to one application.
+model AppMembership {
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  createdAt     DateTime    @default(now())
+
+  @@id([userId, applicationId])
+}
+
+// One row submitted through a generated form. `data` is keyed by field name.
+model DataRecord {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  data          Json
+  createdById   String
+  createdBy     User        @relation(fields: [createdById], references: [id])
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([applicationId, createdAt])
+}

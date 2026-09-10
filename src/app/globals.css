@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+/*
+  Design tokens. Every color pair used for text meets WCAG 2.1 AA (4.5:1).
+  Use the semantic names (ink, surface, line, brand) in components rather than
+  raw Tailwind palette colors so contrast stays consistent.
+*/
+@theme {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
+
+  --color-brand-50: #eef2ff;
+  --color-brand-100: #e0e7ff;
+  --color-brand-600: #4f46e5;
+  --color-brand-700: #4338ca; /* 8.5:1 on white */
+  --color-brand-800: #3730a3;
+
+  --color-surface: #ffffff;
+  --color-surface-muted: #f5f6f8;
+  --color-ink: #16181d;
+  --color-ink-muted: #4b5563; /* 7.5:1 on white */
+  --color-line: #d4d7de;
+  --color-danger: #b42318; /* 6.4:1 on white */
+  --color-danger-soft: #fef3f2;
+  --color-success: #067647;
+  --color-focus: #1d4ed8;
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+  }
+
+  body {
+    @apply bg-surface font-sans text-ink antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-semibold tracking-tight text-ink;
+  }
+
+  /* One visible focus style everywhere. Never remove it. */
+  :focus-visible {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-5xl px-4 sm:px-6;
+  }
+
+  /* Visually hidden until focused, then pinned to the top-left corner. */
+  .skip-link {
+    @apply sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:bg-brand-700 focus:px-4 focus:py-2 focus:text-white;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-primary {
+    @apply bg-brand-700 text-white hover:bg-brand-800;
+  }
+
+  .btn-secondary {
+    @apply border border-line bg-surface text-ink hover:bg-surface-muted;
+  }
+
+  .nav-link {
+    @apply text-sm font-medium text-ink-muted hover:text-ink;
+  }
+
+  .label {
+    @apply mb-1 block text-sm font-medium text-ink;
+  }
+
+  .input {
+    @apply block w-full rounded-md border border-line bg-surface px-3 py-2 text-ink placeholder:text-ink-muted aria-[invalid=true]:border-danger;
+  }
+
+  .field-hint {
+    @apply mt-1 text-sm text-ink-muted;
+  }
+
+  .field-error {
+    @apply mt-1 text-sm font-medium text-danger;
+  }
+
+  .card {
+    @apply rounded-lg border border-line bg-surface p-6 shadow-sm;
+  }
+}
