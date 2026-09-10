@@ -1,1 +1,3 @@
 # blueprint
+
+Jay Jorgensen (lead)
