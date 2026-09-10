@@ -47,3 +47,6 @@ next-env.d.ts
 
 # prisma client is generated on install (npm run db:generate)
 /src/generated/
+
+# full README, kept locally until it is restored
+README.full.md
