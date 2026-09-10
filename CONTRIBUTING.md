@@ -34,7 +34,7 @@ Never push directly to `main`.
 2. Run `npm run db:migrate` and give the migration a descriptive name.
 3. Commit the new folder under `prisma/migrations/` with your code.
 4. If the seed needs to change, update `prisma/seed.ts` and run `npm run db:reset` to confirm it still works from scratch.
-5. Only ever run `db:migrate` and `db:reset` against your own Neon branch, never against `main`.
+5. Only ever run `db:migrate` and `db:reset` against your own Supabase project, never against production.
 
 ## Getting unstuck
 

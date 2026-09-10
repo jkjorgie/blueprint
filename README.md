@@ -23,11 +23,11 @@ Marcus Palmer
 | Styling | Tailwind CSS v4 with our own design tokens in `src/app/globals.css` |
 | Validation | Zod |
 | Tests | Vitest, Testing Library, jest-axe |
-| Hosting | Vercel + Neon Postgres |
+| Hosting | Vercel + Supabase Postgres |
 
 ## Getting started
 
-You need Node 22 (see `.nvmrc`) and a Neon branch of your own. Ask Jay for yours if you don't have one yet.
+You need Node 22 (see `.nvmrc`) and a free Supabase project of your own (https://supabase.com). Each developer gets their own project so nobody's migrations or resets affect anyone else.
 
 ```bash
 # 1. Install dependencies (also generates the Prisma client)
@@ -35,7 +35,7 @@ npm install
 
 # 2. Create your local env file
 cp .env.example .env
-# paste your Neon connection string into DATABASE_URL
+# paste your Supabase session-pooler URI into DATABASE_URL (see the comments in .env.example)
 # replace AUTH_SECRET with the output of: openssl rand -base64 32
 
 # 3. Apply migrations and load sample data
@@ -56,12 +56,15 @@ Open http://localhost:3000 and sign in with one of the seeded accounts. The pass
 
 ### Databases
 
-We use one Neon project with several branches:
-
-| Branch | Used by |
+| Database | Used by |
 |---|---|
-| `main` | The deployed app on Vercel. Only `prisma migrate deploy` from the build touches it. |
-| one branch per developer | Your local `npm run dev`. Reset it whenever you like with `npm run db:reset`. |
+| Jay's production Supabase project | The deployed app on Vercel. Only `prisma migrate deploy` from the build touches it. |
+| your own Supabase project | Your local `npm run dev`. Reset it whenever you like with `npm run db:reset`. |
+
+Two Supabase details that matter:
+
+- Use the **session pooler** (port 5432) locally. Prisma migrations do not work through the transaction pooler (port 6543).
+- Keep `?uselibpqcompat=true&sslmode=require` on the URL. Without it the Postgres driver rejects Supabase's certificate chain.
 
 Working offline? `npx prisma dev` starts a local Postgres in your terminal with no install. Copy the connection string it prints into `DATABASE_URL`.
 

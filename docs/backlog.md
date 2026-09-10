@@ -17,7 +17,7 @@ Goal: an end user can open the seeded "Bug Reports" app, submit a record through
 | S1-5 | **Records list** (starter) | M | | `src/app/apps/[appId]/records/page.tsx` plus `src/components/records-table.tsx`. A `<table>` with a `<caption>`, `<th scope="col">` from the schema, one row per record. Format booleans and dates for humans. Sorting and search come in Sprint 2, so keep the component open to that. Add an axe test. |
 | S1-6 | **Analyst dashboard: my apps** | S | | Replace the placeholder cards on `/dashboard` for the ANALYST role with a list of the analyst's applications linking to S1-4 and S1-5. |
 | S1-7 | **End-user dashboard: my apps** (starter) | S | | Same as S1-6 for END_USER, listing apps they are a member of. |
-| S1-8 | **Vercel deploy** | S | | Create the Vercel project, point `DATABASE_URL` at the Neon `main` branch, set `AUTH_SECRET`, set the build command to `prisma migrate deploy && npm run build`. Document the URL in the README. |
+| S1-8 | **Vercel deploy** | S | | Create the Vercel project. Set `DATABASE_URL` to the production Supabase transaction pooler (port 6543), `DIRECT_URL` to its session pooler (port 5432), both with `?uselibpqcompat=true&sslmode=require`, and `AUTH_SECRET`, set the build command to `prisma migrate deploy && npm run build`. Document the URL in the README. |
 
 ## Sprint 2: schema-driven apps
 
