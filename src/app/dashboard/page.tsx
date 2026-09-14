@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { requireUser } from "@/lib/session";
+import { AnalystApps } from "@/components/analyst-apps";
+import { MemberApps } from "@/components/member-apps";
 import type { Role } from "@/generated/prisma/client";
 
 export const metadata: Metadata = { title: "Dashboard" };
@@ -8,14 +10,6 @@ const roleLabels: Record<Role, string> = {
   ADMIN: "Administrator",
   ANALYST: "Business analyst",
   END_USER: "End user",
-};
-
-// What each tier will eventually see here. Replace these with real sections as
-// the features land.
-const upcoming: Record<Role, string[]> = {
-  ADMIN: ["Analyst accounts", "Platform activity"],
-  ANALYST: ["My applications", "My end users", "New application from JSON"],
-  END_USER: ["Applications I can use", "My recent records"],
 };
 
 export default async function DashboardPage() {
@@ -28,18 +22,16 @@ export default async function DashboardPage() {
         You are signed in as <strong className="text-ink">{roleLabels[user.role]}</strong>.
       </p>
 
-      <section aria-labelledby="upcoming-heading" className="mt-10">
-        <h2 id="upcoming-heading" className="text-xl">
-          Coming to this page
-        </h2>
-        <ul className="mt-4 grid gap-4 sm:grid-cols-2">
-          {upcoming[user.role].map((item) => (
-            <li key={item} className="card text-ink-muted">
-              {item}
-            </li>
-          ))}
-        </ul>
-      </section>
+      {user.role === "ANALYST" && <AnalystApps userId={user.id} />}
+      {user.role === "END_USER" && <MemberApps userId={user.id} />}
+      {user.role === "ADMIN" && (
+        <section aria-labelledby="admin-heading" className="mt-10">
+          <h2 id="admin-heading" className="text-xl">
+            Administration
+          </h2>
+          <p className="mt-4 text-ink-muted">The admin console is coming soon.</p>
+        </section>
+      )}
     </div>
   );
 }

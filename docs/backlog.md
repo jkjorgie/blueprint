@@ -1,5 +1,7 @@
 # Tasks
 
+Jay sends current assignments with full specs directly. This file is the longer-range plan.
+
 How this is organized: Jay's tasks form the dependency spine, so they are ordered and each one unblocks something. Marcus's and Terrystan's tasks come in batches. Everything in a batch can be started today and finished without waiting on anyone. When Jay's spine reaches a milestone, the next batch opens.
 
 Sizes: S = an afternoon, M = two to three days. Every PR must pass `npm run lint`, `npm run typecheck`, and `npm test`, and must be usable with only the keyboard. That is not repeated below.

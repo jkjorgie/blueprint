@@ -47,3 +47,6 @@ next-env.d.ts
 
 # prisma client is generated on install (npm run db:generate)
 /src/generated/
+
+# task specs are sent to teammates directly, not committed
+/docs/tasks/
