@@ -59,8 +59,6 @@ npm run typecheck
 npm test
 ```
 
-All three must pass. See [CONTRIBUTING.md](CONTRIBUTING.md) for the rest.
-
 ## Stack
 
 Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4, Prisma 7 on Supabase Postgres, Auth.js v5, Zod, Vitest with jest-axe. Deployed on Vercel.

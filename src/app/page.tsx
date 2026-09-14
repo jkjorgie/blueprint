@@ -7,7 +7,7 @@ const audiences = [
   },
   {
     heading: "End users",
-    body: "Add and browse records through generated forms and lists that work with a keyboard and a screen reader.",
+    body: "Submit responses through generated forms and browse them in lists that work with a keyboard and a screen reader.",
   },
   {
     heading: "Administrators",

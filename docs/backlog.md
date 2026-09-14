@@ -14,15 +14,15 @@ Already built: sign-in and sign-out, the three account tiers, the data model, `r
 
 Do these in order. Each one is what the next batch for the others is waiting on.
 
-**J1 Record validator** (S) → unblocks J2
+**J1 Record validator** (S) → unblocks J2. DONE 2026-09-13.
 `src/lib/schema/record-schema.ts`. `buildRecordSchema(appSchema)` returns a Zod object for one record's `data`: required, `maxLength`, `min`/`max`, select options, date as `YYYY-MM-DD`, boolean coerced from `"on"`/missing. `parseRecord(appSchema, formData)` returns `{ ok: true, data }` or `{ ok: false, errors: RecordErrors }`.
 Done when: a unit test covers every field type valid and invalid.
 
-**J2 Create-record action** (S) → unblocks J3
+**J2 Create-record action** (S) → unblocks J3. DONE 2026-09-13.
 `src/app/actions/records.ts`, `createRecord(applicationId, prevState, formData)`: `requireUser()`, owner-or-member check, J1, insert, `revalidatePath`. Returns `{ errors }` on failure.
 Done when: a member's submission is saved and a non-member's is refused.
 
-**J3 App page and wiring** (S, needs Marcus M1) → completes the Sprint 1 walking skeleton
+**J3 App page and wiring** (S) → completes the Sprint 1 walking skeleton. DONE 2026-09-13, except the dashboard links, which land with M2 and T2.
 `src/app/apps/[appId]/page.tsx`: load, `notFound()` for non-owner non-member, render M1 wired to J2, link from both dashboards.
 Done when: user@blueprint.local can submit a Bug Report and see it in Terrystan's table on the Vercel site.
 
@@ -54,7 +54,7 @@ Vercel matches `main`, demo accounts ready, `docs/demo.md` with the click path.
 
 ### Batch 1: start now, no dependencies
 
-**M1 Form renderer** (M)
+**M1 Form renderer** (M). DONE 2026-09-13, built by Jay so it landed with the walking skeleton.
 `src/components/schema-form/schema-form.tsx`. Props: `schema: AppSchema`, `action`, `errors?: RecordErrors`, `defaultValues?`. One control per field: text and textarea as inputs, number as `type="number"`, boolean as a checkbox, date as `type="date"`, select as a native `<select>` with a blank first option. Every control has `<label htmlFor>`, `helpText` connected with `aria-describedby`, and when `errors[field.name]` exists, an error message also connected with `aria-describedby` plus `aria-invalid="true"`. Use the `label`, `input`, `field-hint`, and `field-error` classes. Develop it against a dummy action that returns fake errors; Jay wires the real one in J3.
 Done when: the "Bug Reports" schema renders five labeled controls, an axe test passes, and a test proves an error is attached to the right field.
 
@@ -95,7 +95,7 @@ Sort links on Terrystan's table headers, `?sort=field&dir=asc|desc`, sorting in 
 ### Batch 1: start now, no dependencies
 
 **T1 Records table** (M)
-`src/components/records-table.tsx` and `src/app/apps/[appId]/records/page.tsx`. Owner-or-member check (copy the pattern: `requireUser()`, then query the app with its memberships). `<table>` with a `<caption>` naming the app, `<th scope="col">` per field using the label, plus a "Submitted" column. Booleans as "Yes"/"No", dates readable, missing values blank. Empty state is a paragraph, not an empty table.
+`src/components/records-table.tsx` and `src/app/apps/[appId]/responses/page.tsx`. UI copy says "responses", code says records. Owner-or-member check (copy the pattern: `requireUser()`, then query the app with its memberships). `<table>` with a `<caption>` naming the app, `<th scope="col">` per field using the label, plus a "Submitted" column. Booleans as "Yes"/"No", dates readable, missing values blank. Empty state is a paragraph, not an empty table.
 Done when: the two seeded records render, an axe test passes, the page links back to the app.
 
 **T2 End-user dashboard: my apps** (S)
