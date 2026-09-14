@@ -93,3 +93,8 @@ export function parseAppSchemaJson(text: string): ParseResult {
   }
   return parseAppSchema(value);
 }
+
+// Validation errors for one record, keyed by field name. The form renderer
+// displays these next to the matching control; the record validator produces
+// them. Both sides build against this type so they can be developed in parallel.
+export type RecordErrors = Partial<Record<string, string>>;

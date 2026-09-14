@@ -1,53 +1,143 @@
-# Backlog
+# Tasks
 
-Tasks are grouped by sprint and sized S (an afternoon), M (a few days), or L (most of a sprint). Tasks marked **starter** are self-contained and a good first pull request. Put your name in the Owner column when you pick one up.
+How this is organized: Jay's tasks form the dependency spine, so they are ordered and each one unblocks something. Marcus's and Terrystan's tasks come in batches. Everything in a batch can be started today and finished without waiting on anyone. When Jay's spine reaches a milestone, the next batch opens.
 
-The scaffolding already provides: the data model, sign-in and sign-out, the `requireUser` helper, the JSON schema contract with validation, the base stylesheet and layout, and a test harness with axe.
+Sizes: S = an afternoon, M = two to three days. Every PR must pass `npm run lint`, `npm run typecheck`, and `npm test`, and must be usable with only the keyboard. That is not repeated below.
 
-## Sprint 1: walking skeleton
+Already built: sign-in and sign-out, the three account tiers, the data model, `requireUser()` in `src/lib/session.ts`, the JSON schema contract and the `RecordErrors` type in `src/lib/schema/app-schema.ts`, the base stylesheet, and a test harness with axe.
 
-Goal: an end user can open the seeded "Bug Reports" app, submit a record through a generated form, and see it in a list.
+---
 
-| ID | Task | Size | Owner | Notes |
-|---|---|---|---|---|
-| S1-1 | **Record validator** (starter) | S | | `src/lib/schema/record-schema.ts`. Write `buildRecordSchema(appSchema)` that returns a Zod object validating one record's `data` against the app's fields: required, maxLength, min/max, select options, date format, boolean coercion from form data. Unit test every field type. Pure function, no UI. |
-| S1-2 | **Form renderer** | M | | `src/components/schema-form/`. A component that takes an `AppSchema` and renders one control per field. Text and textarea as inputs, number as `type="number"`, boolean as a checkbox, date as `type="date"`, select as a native `<select>`. Every control gets a `<label>`, `helpText` via `aria-describedby`, and an error slot. Accepts a server action as its `action` prop and shows errors returned from it. Add an axe test. |
-| S1-3 | **Create-record server action** | S | | `src/app/actions/records.ts`. `createRecord(applicationId, prevState, formData)`: `requireUser`, confirm the user owns the app or has an `AppMembership`, validate with S1-1, insert a `DataRecord`, `revalidatePath`. Return field errors in a shape S1-2 can display. |
-| S1-4 | **App page** | S | | `src/app/apps/[appId]/page.tsx`. Loads the app (404 if the user is not owner or member), shows its title, renders S1-2 wired to S1-3. |
-| S1-5 | **Records list** (starter) | M | | `src/app/apps/[appId]/records/page.tsx` plus `src/components/records-table.tsx`. A `<table>` with a `<caption>`, `<th scope="col">` from the schema, one row per record. Format booleans and dates for humans. Sorting and search come in Sprint 2, so keep the component open to that. Add an axe test. |
-| S1-6 | **Analyst dashboard: my apps** | S | | Replace the placeholder cards on `/dashboard` for the ANALYST role with a list of the analyst's applications linking to S1-4 and S1-5. |
-| S1-7 | **End-user dashboard: my apps** (starter) | S | | Same as S1-6 for END_USER, listing apps they are a member of. |
-| S1-8 | **Vercel deploy** | S | | Create the Vercel project. Set `DATABASE_URL` to the production Supabase transaction pooler (port 6543), `DIRECT_URL` to its session pooler (port 5432), both with `?uselibpqcompat=true&sslmode=require`, and `AUTH_SECRET`, set the build command to `prisma migrate deploy && npm run build`. Document the URL in the README. |
+## Jay: the spine
 
-## Sprint 2: schema-driven apps
+Do these in order. Each one is what the next batch for the others is waiting on.
 
-Goal: an analyst can create, edit, and publish an app from JSON with clear validation feedback, and the renderer covers every field type well.
+**J1 Record validator** (S) → unblocks J2
+`src/lib/schema/record-schema.ts`. `buildRecordSchema(appSchema)` returns a Zod object for one record's `data`: required, `maxLength`, `min`/`max`, select options, date as `YYYY-MM-DD`, boolean coerced from `"on"`/missing. `parseRecord(appSchema, formData)` returns `{ ok: true, data }` or `{ ok: false, errors: RecordErrors }`.
+Done when: a unit test covers every field type valid and invalid.
 
-| ID | Task | Size | Owner | Notes |
-|---|---|---|---|---|
-| S2-1 | **New application page** | M | | `src/app/apps/new/page.tsx`. Name, slug, description, and a JSON textarea. Server action runs `parseAppSchemaJson`, shows every error in a list linked from a `role="alert"` summary, saves as a draft on success. ANALYST only. |
-| S2-2 | **Edit and republish** | M | | `src/app/apps/[appId]/edit/page.tsx`. Same form pre-filled. Publish and unpublish actions. Decide and document what happens to existing records when a field is removed (recommended: keep the data, stop rendering it). |
-| S2-3 | **Error states for every field type** (starter) | S | | Audit S1-2 against S1-1: each validation failure produces a specific message next to the right control, focus moves to the first invalid control on submit, and the error is announced by a screen reader. |
-| S2-4 | **Sortable columns** (starter) | S | | Add sort links to the S1-5 table headers using `?sort=field&dir=asc`. Set `aria-sort` on the active header. Sorting happens in the database query. |
-| S2-5 | **Search** (starter) | S | | Add a search form above the S1-5 table using `?q=`. Match against every text field in the JSON. Keep the query in the input after submit and announce the result count. |
-| S2-6 | **Accessibility pass** | M | | Run the app with VoiceOver (macOS) and NVDA (Windows) through sign-in, create record, and list. Write findings in `docs/a11y-report.md` and file a task for each defect. |
+**J2 Create-record action** (S) → unblocks J3
+`src/app/actions/records.ts`, `createRecord(applicationId, prevState, formData)`: `requireUser()`, owner-or-member check, J1, insert, `revalidatePath`. Returns `{ errors }` on failure.
+Done when: a member's submission is saved and a non-member's is refused.
 
-## Sprint 3: authorization and user management
+**J3 App page and wiring** (S, needs Marcus M1) → completes the Sprint 1 walking skeleton
+`src/app/apps/[appId]/page.tsx`: load, `notFound()` for non-owner non-member, render M1 wired to J2, link from both dashboards.
+Done when: user@blueprint.local can submit a Bug Report and see it in Terrystan's table on the Vercel site.
 
-| ID | Task | Size | Owner | Notes |
-|---|---|---|---|---|
-| S3-1 | **Admin console** | M | | `src/app/admin/page.tsx`, ADMIN only. List analysts, create an analyst (name, email, temporary password), deactivate and reactivate. Deactivation must lock the user out on their next request. |
-| S3-2 | **Analyst user management** | M | | `src/app/users/page.tsx`, ANALYST only. Create end users (`managedById` = the analyst), grant and revoke `AppMembership` per app. An analyst must never see another analyst's users or apps. |
-| S3-3 | **Roles and permissions model** | L | | Add `AppRole` (name, permissions: view, create, edit, delete) and attach it to `AppMembership`. Role builder UI. Enforce in every records action. This is the Enhancement requirement, so it comes after S3-1 and S3-2. |
-| S3-4 | **Edit and delete records** | M | | Edit form pre-filled from an existing record, delete with a confirm step. Both actions re-check membership and, once S3-3 exists, permission. |
-| S3-5 | **Password change** (starter) | S | | Signed-in users can change their password. Current password required. |
+**J4 Application actions** (S) → opens Batch 2
+`src/app/actions/applications.ts`: `createApplication`, `updateApplication`, `publishApplication`, `unpublishApplication`. `requireUser(["ANALYST"])`, ownership check, `parseAppSchemaJson`, return the error list on failure.
+Done when: tests cover a valid save, an invalid schema, and another analyst's app.
 
-## Sprint 4: polish and stretch
+**J5 Field removal policy** (S)
+Removing a field keeps its data in JSON and stops rendering it. Test that a record with an extra key still renders.
 
-| ID | Task | Size | Owner | Notes |
-|---|---|---|---|---|
-| S4-1 | **Demo seed apps** (starter) | S | | Two or three more realistic sample apps in `prisma/seed.ts` for the final demo. |
-| S4-2 | **Loading and error UI** (starter) | S | | `loading.tsx` and `error.tsx` under `src/app/apps/[appId]/`. Errors must be readable and offer a way back. |
-| S4-3 | **Visual schema builder** | L | | Point-and-click field editor that produces the same JSON. Stretch. |
-| S4-4 | **CSV export and import** | M | | Stretch. Export a list to CSV; import CSV rows through the record validator. |
-| S4-5 | **Per-app theming** | S | | Stretch. Analyst picks an accent color; verify contrast stays AA. |
+**J6 Roles and permissions model** (M) → opens Batch 3
+`AppRole` (applicationId, name, canView, canCreate, canEdit, canDelete), optional `roleId` on `AppMembership`, migration. `can(user, app, "edit")` in `src/lib/permissions.ts`: owner can do everything, member with no role can view and create. Enforce in J2 and the app pages.
+Done when: unit tests cover owner, member with role, member without role, non-member, for each permission.
+
+**J7 Enforce permissions on edit and delete** (S, needs Marcus M6)
+Wire `can()` into `updateRecord` and `deleteRecord`. Hide buttons in the UI when not allowed, but the server check is the gate.
+
+**J8 Accessibility audit** (M, Sprint 4)
+VoiceOver through the whole core path. Findings in `docs/a11y-report.md`, fix everything on the core path.
+
+**J9 Final deployment and demo script** (S, Sprint 4)
+Vercel matches `main`, demo accounts ready, `docs/demo.md` with the click path.
+
+**Ongoing:** review every PR within a day. Run the demo path on Vercel before each sprint review.
+
+---
+
+## Marcus
+
+### Batch 1: start now, no dependencies
+
+**M1 Form renderer** (M)
+`src/components/schema-form/schema-form.tsx`. Props: `schema: AppSchema`, `action`, `errors?: RecordErrors`, `defaultValues?`. One control per field: text and textarea as inputs, number as `type="number"`, boolean as a checkbox, date as `type="date"`, select as a native `<select>` with a blank first option. Every control has `<label htmlFor>`, `helpText` connected with `aria-describedby`, and when `errors[field.name]` exists, an error message also connected with `aria-describedby` plus `aria-invalid="true"`. Use the `label`, `input`, `field-hint`, and `field-error` classes. Develop it against a dummy action that returns fake errors; Jay wires the real one in J3.
+Done when: the "Bug Reports" schema renders five labeled controls, an axe test passes, and a test proves an error is attached to the right field.
+
+**M2 Analyst dashboard: my apps** (S)
+On `/dashboard` for ANALYST: list the analyst's applications with name, description, Published or Draft, and record count. Link each to `/apps/[appId]` (the page will 404 until J3 lands, that is fine). Empty state text: "You have no applications yet."
+Done when: analyst@blueprint.local sees "Bug Reports" with a record count.
+
+**M3 Loading and error UI** (S)
+`loading.tsx` and `error.tsx` under `src/app/dashboard/` and `src/app/apps/[appId]/`. Error UI is readable and has a link back.
+Done when: throwing inside the dashboard page shows the error UI instead of a blank screen.
+
+**M4 Admin console** (M)
+`src/app/admin/page.tsx`, `requireUser(["ADMIN"])`. Table of analysts (name, email, Active or Inactive). Create form: name, email, temporary password, shown once after creation. Deactivate and reactivate buttons as small forms with server actions in `src/app/actions/admin.ts`.
+Done when: a deactivated analyst is bounced to sign-in on their next page load.
+
+### Batch 2: after J4 lands
+
+**M5 New application page** (M)
+`src/app/apps/new/page.tsx`: name, slug (auto-filled from name, editable), description, JSON textarea pre-filled with a starter example. Calls `createApplication`. On failure a `role="alert"` summary lists every error. On success go to the app page. Link from the analyst dashboard.
+Done when: bad JSON shows the specific errors, the sample schema creates a draft.
+
+**M6 Edit and delete records** (M)
+`src/app/apps/[appId]/records/[recordId]/edit/page.tsx` using M1 pre-filled via `defaultValues`. `updateRecord` and `deleteRecord` in `src/app/actions/records.ts`, owner-or-member check for now. Delete has a confirm page, not `window.confirm`.
+Done when: editing a seeded record updates the table, deleting removes it after confirming.
+
+### Batch 3: after J6 lands
+
+**M7 Sortable columns** (S)
+Sort links on Terrystan's table headers, `?sort=field&dir=asc|desc`, sorting in the Prisma query, `aria-sort` on the active header, default newest first.
+
+**M8 CSV export** (S, stretch)
+"Export CSV" on the records page, respects search and sort, field labels as headers.
+
+---
+
+## Terrystan
+
+### Batch 1: start now, no dependencies
+
+**T1 Records table** (M)
+`src/components/records-table.tsx` and `src/app/apps/[appId]/records/page.tsx`. Owner-or-member check (copy the pattern: `requireUser()`, then query the app with its memberships). `<table>` with a `<caption>` naming the app, `<th scope="col">` per field using the label, plus a "Submitted" column. Booleans as "Yes"/"No", dates readable, missing values blank. Empty state is a paragraph, not an empty table.
+Done when: the two seeded records render, an axe test passes, the page links back to the app.
+
+**T2 End-user dashboard: my apps** (S)
+On `/dashboard` for END_USER: apps the user is a member of, each linking to `/apps/[appId]`. Empty state: "You have not been added to any applications yet."
+Done when: user@blueprint.local sees "Bug Reports".
+
+**T3 Change password** (S)
+`src/app/account/page.tsx` for any signed-in user: current password, new password, confirm. Action in `src/app/actions/account.ts` verifies the current password with `bcrypt.compare` and requires at least 12 characters. Link it from the header next to Sign out.
+Done when: a wrong current password is rejected, a correct one lets the user sign in with the new password.
+
+**T4 Demo seed apps** (S)
+Two more sample apps in `prisma/seed.ts`, for example "Equipment Requests" and "Event RSVPs", each with five to eight fields covering every field type and a few records each. Give user@blueprint.local membership in both. Run `npm run db:seed` to load them (it upserts, so it is safe on the shared database).
+Done when: both apps appear on the analyst dashboard with records.
+
+**T5 Search** (S, after your own T1)
+A search form above the table using `?q=`. Case-insensitive match against every text and textarea field. Keep the query in the input, announce "N results for 'query'" in a live region.
+Done when: searching "Safari" in Bug Reports returns one row, clearing returns both.
+
+### Batch 2: after J4 lands
+
+**T6 Edit application page** (M)
+`src/app/apps/[appId]/edit/page.tsx`, same form as Marcus's M5 pre-filled (share the form component with him), calling `updateApplication`. Publish and Unpublish buttons. Owner only, linked from the app page.
+Done when: changing a label shows on the form, unpublishing hides the app from end users.
+
+**T7 Analyst user management** (M)
+`src/app/users/page.tsx`, `requireUser(["ANALYST"])`. List users where `managedById` is the analyst. Create form (name, email, temporary password). Per user, checkboxes for membership in each of the analyst's apps, saved by one action. Never show another analyst's users.
+Done when: creating a user and ticking "Bug Reports" lets them sign in and see it.
+
+### Batch 3: after J6 lands
+
+**T8 Role builder** (M)
+On the edit-app page a "Roles" section: list, add (name plus four permission checkboxes), delete. Then a role dropdown per membership on T7's page.
+Done when: a "Viewer" role with only view, assigned to a user, hides the create form for them.
+
+**T9 Per-app accent color** (S, stretch)
+Optional `accent` on the application from a fixed list of six AA-safe colors, used on the app page heading bar and primary button.
+
+---
+
+## Sprint mapping
+
+| Sprint | Jay | Marcus | Terrystan |
+|---|---|---|---|
+| 1 | J1, J2, J3 | M1, M2, M3 | T1, T2, T3 |
+| 2 | J4, J5 | M4, M5, M6 | T4, T5, T6 |
+| 3 | J6, J7 | M7 | T7, T8 |
+| 4 | J8, J9 | M8 | T9 |
