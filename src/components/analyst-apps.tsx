@@ -36,7 +36,7 @@ export async function AnalystApps({ userId }: { userId: string }) {
                 {app.published ? "Published" : "Draft"} ·{" "}
                 {app._count.records === 1
                   ? "1 record"
-                  : `${app._count.records} records`}
+                  : `${app._count.records} responses`}
               </p>
             </li>
           ))}
