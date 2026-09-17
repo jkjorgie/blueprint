@@ -50,3 +50,6 @@ next-env.d.ts
 
 # task specs are sent to teammates directly, not committed
 /docs/tasks/
+
+# local status page for standups
+/project-status/
