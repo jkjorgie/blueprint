@@ -1,0 +1,109 @@
+// Tests for the records table. No database: the component takes plain props,
+// so a hand-written schema and a couple of fake rows cover every rule.
+import { describe, expect, it } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { axe } from "jest-axe";
+import type { AppSchema } from "@/lib/schema/app-schema";
+import { RecordsTable, formatValue, type RecordRow } from "./records-table";
+
+// Deliberately small, but one field of each awkward type: a plain string, a
+// boolean that needs Yes/No, and a date that needs time-zone-safe parsing.
+const schema: AppSchema = {
+  title: "Bug Reports",
+  fields: [
+    { name: "title", label: "Title", type: "text", required: true },
+    { name: "reproducible", label: "Reproducible every time", type: "boolean", required: false },
+    { name: "reported_on", label: "Reported on", type: "date", required: true },
+  ],
+};
+
+const records: RecordRow[] = [
+  {
+    id: "rec-1",
+    data: { title: "Save button does nothing on Safari", reproducible: true, reported_on: "2026-09-01" },
+    createdAt: new Date("2026-09-01T10:00:00"),
+  },
+  {
+    // Second row leaves reported_on out entirely, so the missing-value rule is
+    // exercised by a real row rather than only by the helper's unit test.
+    id: "rec-2",
+    data: { title: "Typo on the welcome banner", reproducible: false },
+    createdAt: new Date("2026-09-03T10:00:00"),
+  },
+];
+
+describe("RecordsTable", () => {
+  it("renders a column per schema field plus Submitted", () => {
+    render(<RecordsTable schema={schema} records={records} />);
+
+    const headers = screen.getAllByRole("columnheader").map((th) => th.textContent);
+    // Asserting the whole array in order, not just membership: a column that
+    // drifts out of position would still pass individual checks.
+    expect(headers).toEqual(["Title", "Reproducible every time", "Reported on", "Submitted"]);
+  });
+
+  it("formats booleans, dates, and missing values", () => {
+    render(<RecordsTable schema={schema} records={records} />);
+
+    const rows = screen.getAllByRole("row");
+    // rows[0] is the header row, so the data rows start at index 1.
+    const first = rows[1].querySelectorAll("td");
+    const second = rows[2].querySelectorAll("td");
+
+    expect(first[0].textContent).toBe("Save button does nothing on Safari");
+    expect(first[1].textContent).toBe("Yes");
+    // Built the same way the component does, so this passes in any time zone
+    // while still failing if the component drops the T00:00:00 guard in a
+    // zone behind UTC.
+    expect(first[2].textContent).toBe(new Date("2026-09-01T00:00:00").toLocaleDateString());
+
+    expect(second[1].textContent).toBe("No");
+    // Missing value renders as a blank cell, not "undefined".
+    expect(second[2].textContent).toBe("");
+  });
+
+  it("names the table for screen readers", () => {
+    render(<RecordsTable schema={schema} records={records} />);
+    expect(screen.getByRole("table")).toHaveAccessibleName("Records for Bug Reports");
+  });
+
+  it("shows a paragraph instead of an empty table when there are no records", () => {
+    render(<RecordsTable schema={schema} records={[]} />);
+
+    expect(screen.getByText("No records yet.")).toBeInTheDocument();
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+  });
+
+  it("has no detectable accessibility violations", async () => {
+    const { container } = render(<RecordsTable schema={schema} records={records} />);
+    expect(await axe(container)).toHaveNoViolations();
+  });
+});
+
+// The helper carries the display rules, so it is worth pinning down directly:
+// these cases are cheaper to state here than to build a whole row for.
+describe("formatValue", () => {
+  const boolean = schema.fields[1];
+  const date = schema.fields[2];
+  const text = schema.fields[0];
+
+  it("renders missing values as blank", () => {
+    expect(formatValue(text, undefined)).toBe("");
+    expect(formatValue(text, null)).toBe("");
+    // false is a real answer, not a missing one, so it must survive the check.
+    expect(formatValue(boolean, false)).toBe("No");
+  });
+
+  it("renders the stored calendar day, not the UTC one", () => {
+    expect(formatValue(date, "2026-09-03")).toBe(new Date("2026-09-03T00:00:00").toLocaleDateString());
+  });
+
+  it("falls back to the raw value for an unparseable date", () => {
+    expect(formatValue(date, "not-a-date")).toBe("not-a-date");
+  });
+
+  it("stringifies everything else", () => {
+    expect(formatValue(text, "Save button")).toBe("Save button");
+    expect(formatValue(text, 42)).toBe("42");
+  });
+});
