@@ -42,7 +42,7 @@ That's it. We all share one database, so there is nothing to set up or migrate.
    npm run dev
    ```
 2. Open http://localhost:3000.
-3. Sign in with one of these. The password for both is `password123`.
+3. Sign in with one of these. The password for both is `blueprint-demo`.
 
    | Email | Who they are |
    |---|---|

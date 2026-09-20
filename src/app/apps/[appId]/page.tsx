@@ -25,7 +25,7 @@ export default async function AppPage({ params, searchParams }: Props) {
   if (!app) notFound();
 
   const action = createRecord.bind(null, app.id);
-  const recordsHref = `/apps/${app.id}/records`;
+  const responsesHref = `/apps/${app.id}/responses`;
 
   return (
     <div className="container-page py-12">
@@ -39,7 +39,7 @@ export default async function AppPage({ params, searchParams }: Props) {
             </p>
           )}
         </div>
-        <Link href={recordsHref} className="btn btn-secondary">
+        <Link href={responsesHref} className="btn btn-secondary">
           View responses
         </Link>
       </div>
@@ -47,7 +47,7 @@ export default async function AppPage({ params, searchParams }: Props) {
       {saved === "1" && (
         <p role="status" className="mt-6 rounded-md bg-brand-50 p-3 text-sm text-brand-800">
           Your response was saved.{" "}
-          <Link href={recordsHref} className="font-medium underline">
+          <Link href={responsesHref} className="font-medium underline">
             View responses
           </Link>{" "}
           or submit another below.

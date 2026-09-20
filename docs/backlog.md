@@ -71,11 +71,11 @@ Vercel matches `main`, demo accounts ready, `docs/demo.md` with the click path.
 `src/components/schema-form/schema-form.tsx`. Props: `schema: AppSchema`, `action`, `errors?: RecordErrors`, `defaultValues?`. One control per field: text and textarea as inputs, number as `type="number"`, boolean as a checkbox, date as `type="date"`, select as a native `<select>` with a blank first option. Every control has `<label htmlFor>`, `helpText` connected with `aria-describedby`, and when `errors[field.name]` exists, an error message also connected with `aria-describedby` plus `aria-invalid="true"`. Use the `label`, `input`, `field-hint`, and `field-error` classes. Develop it against a dummy action that returns fake errors; Jay wires the real one in J3.
 Done when: the "Bug Reports" schema renders five labeled controls, an axe test passes, and a test proves an error is attached to the right field.
 
-**M2 Analyst dashboard: my apps** (S)
+**M2 Analyst dashboard: my apps** (S). DONE 2026-09-20.
 On `/dashboard` for ANALYST: list the analyst's applications with name, description, Published or Draft, and record count. Link each to `/apps/[appId]` (the page will 404 until J3 lands, that is fine). Empty state text: "You have no applications yet."
 Done when: analyst@blueprint.local sees "Bug Reports" with a record count.
 
-**M3 Loading and error UI** (S)
+**M3 Loading and error UI** (S). DONE 2026-09-20.
 `loading.tsx` and `error.tsx` under `src/app/dashboard/` and `src/app/apps/[appId]/`. Error UI is readable and has a link back.
 Done when: throwing inside the dashboard page shows the error UI instead of a blank screen.
 
@@ -103,15 +103,15 @@ Sort links on Terrystan's table headers, `?sort=field&dir=asc|desc`, sorting in 
 
 ### Batch 1: start now, no dependencies
 
-**T1 Records table** (M)
+**T1 Responses table** (M). DONE 2026-09-20.
 `src/components/records-table.tsx` and `src/app/apps/[appId]/responses/page.tsx`. UI copy says "responses", code says records. Owner-or-member check (copy the pattern: `requireUser()`, then query the app with its memberships). `<table>` with a `<caption>` naming the app, `<th scope="col">` per field using the label, plus a "Submitted" column. Booleans as "Yes"/"No", dates readable, missing values blank. Empty state is a paragraph, not an empty table.
 Done when: the two seeded records render, an axe test passes, the page links back to the app.
 
-**T2 End-user dashboard: my apps** (S)
+**T2 End-user dashboard: my apps** (S). DONE 2026-09-20.
 On `/dashboard` for END_USER: apps the user is a member of, each linking to `/apps/[appId]`. Empty state: "You have not been added to any applications yet."
 Done when: user@blueprint.local sees "Bug Reports".
 
-**T3 Change password** (S)
+**T3 Change password** (S). DONE 2026-09-20.
 `src/app/account/page.tsx` for any signed-in user: current password, new password, confirm. Action in `src/app/actions/account.ts` verifies the current password with `bcrypt.compare` and requires at least 12 characters. Link it from the header next to Sign out.
 Done when: a wrong current password is rejected, a correct one lets the user sign in with the new password.
 

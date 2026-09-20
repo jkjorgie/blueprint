@@ -1,4 +1,4 @@
-// Tests for the records table. No database: the component takes plain props,
+// Tests for the responses table. No database: the component takes plain props,
 // so a hand-written schema and a couple of fake rows cover every rule.
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
@@ -64,13 +64,13 @@ describe("RecordsTable", () => {
 
   it("names the table for screen readers", () => {
     render(<RecordsTable schema={schema} records={records} />);
-    expect(screen.getByRole("table")).toHaveAccessibleName("Records for Bug Reports");
+    expect(screen.getByRole("table")).toHaveAccessibleName("Responses to Bug Reports");
   });
 
-  it("shows a paragraph instead of an empty table when there are no records", () => {
+  it("shows a paragraph instead of an empty table when there are no responses", () => {
     render(<RecordsTable schema={schema} records={[]} />);
 
-    expect(screen.getByText("No records yet.")).toBeInTheDocument();
+    expect(screen.getByText("No responses yet.")).toBeInTheDocument();
     expect(screen.queryByRole("table")).not.toBeInTheDocument();
   });
 

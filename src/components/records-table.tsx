@@ -1,8 +1,8 @@
-// Renders one application's records as a table. The columns come from the
+// Renders one application's responses as a table. The columns come from the
 // app's schema rather than being hard-coded, so the same component works for
 // any analyst-defined application.
 //
-// UI copy says "records" here; see docs/backlog.md for the wider naming rule.
+// Code says "record" to match the DataRecord model; anything a person reads says "response".
 import type { AppSchema, Field } from "@/lib/schema/app-schema";
 
 // DataRecord.data is JSONB, so Prisma types it loosely. The page casts each
@@ -43,7 +43,7 @@ export function RecordsTable({ schema, records }: { schema: AppSchema; records: 
   // A sentence, not an empty table. A table with headers and no rows reads as
   // broken rather than as "nothing here yet".
   if (records.length === 0) {
-    return <p className="text-ink-muted">No records yet.</p>;
+    return <p className="text-ink-muted">No responses yet.</p>;
   }
 
   return (
@@ -54,7 +54,7 @@ export function RecordsTable({ schema, records }: { schema: AppSchema; records: 
         {/* Names the table for screen reader users, who may land on it without
             having read the heading above. sr-only keeps it out of the visual
             layout, where the h1 already says the same thing. */}
-        <caption className="sr-only">Records for {schema.title}</caption>
+        <caption className="sr-only">Responses to {schema.title}</caption>
         <thead>
           <tr>
             {schema.fields.map((field) => (

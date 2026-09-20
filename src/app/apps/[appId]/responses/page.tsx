@@ -1,9 +1,10 @@
-// Lists the records submitted to one application.
+// Lists the responses submitted to one application.
 //
 // Access is decided entirely by getAppForUser: it returns the app only for the
 // owner or a member of a published app, and null otherwise. Turning that null
 // into notFound() means a stranger cannot tell an app they may not see from one
 // that does not exist.
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/session";
@@ -13,7 +14,7 @@ import { RecordsTable } from "@/components/records-table";
 // In Next.js 16 route params arrive as a Promise and have to be awaited.
 type Props = { params: Promise<{ appId: string }> };
 
-export default async function RecordsPage({ params }: Props) {
+export default async function ResponsesPage({ params }: Props) {
   const { appId } = await params;
 
   // Order matters: establish who the user is before loading anything, so the
@@ -23,7 +24,7 @@ export default async function RecordsPage({ params }: Props) {
   if (!app) notFound();
 
   // Only reached once access is settled, so this query cannot leak another
-  // application's records.
+  // application's responses.
   const records = await db.dataRecord.findMany({
     where: { applicationId: app.id },
     orderBy: { createdAt: "desc" },
@@ -32,7 +33,12 @@ export default async function RecordsPage({ params }: Props) {
 
   return (
     <div className="container-page py-12">
-      <h1 className="text-3xl">{app.name}: records</h1>
+      <h1 className="text-3xl">{app.name}: responses</h1>
+      <p className="mt-2">
+        <Link href={`/apps/${app.id}`} className="font-medium underline">
+          Back to {app.name}
+        </Link>
+      </p>
       <div className="mt-8">
         {/* app.schema is already parsed and validated by getAppForUser, so the
             table can trust its shape without re-checking it. */}

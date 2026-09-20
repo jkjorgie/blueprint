@@ -9,7 +9,7 @@ import type { AppSchema } from "../src/lib/schema/app-schema";
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const db = new PrismaClient({ adapter });
 
-const password = process.env.SEED_PASSWORD ?? "password123";
+const password = process.env.SEED_PASSWORD ?? "blueprint-demo";
 
 const bugReportSchema: AppSchema = {
   title: "Bug Reports",
