@@ -24,6 +24,11 @@ export async function SiteHeader() {
                   </Link>
                 </li>
                 <li>
+                  <Link href="/account" className="nav-link">
+                    Account
+                  </Link>
+                </li>
+                <li>
                   <form action={signOutAction}>
                     <button type="submit" className="btn btn-secondary">
                       Sign out
