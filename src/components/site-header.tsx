@@ -11,7 +11,7 @@ export async function SiteHeader() {
   return (
     <header className="border-b border-line bg-surface">
       <div className="container-page flex h-14 items-center justify-between gap-4">
-        <Link href="/" className="text-lg font-semibold text-ink no-underline">
+        <Link href={signedIn ? "/dashboard" : "/"} className="text-lg font-semibold text-ink no-underline">
           Blueprint
         </Link>
         <nav aria-label="Main">
