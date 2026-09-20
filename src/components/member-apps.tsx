@@ -18,7 +18,7 @@ export async function MemberApps({ userId }: { userId: string }) {
     // `published: true` hides an analyst's unfinished drafts: the membership row
     // can exist before the analyst is ready to show the app, and an end user
     // must never see it in that state.
-    where: { userId, application: { published: true } },
+    where: { userId, application: { published: true, archivedAt: null } },
     // Newest membership first, so a freshly granted application appears at the
     // top rather than buried under older ones.
     orderBy: { createdAt: "desc" },

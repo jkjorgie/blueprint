@@ -1,6 +1,6 @@
 ## What
 
-<!-- One or two sentences on what this PR changes. Link the task from docs/backlog.md if there is one. -->
+<!-- One or two sentences on what this PR changes. Name the task it completes if there is one. -->
 
 ## How to test
 

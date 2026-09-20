@@ -22,6 +22,9 @@ export async function createRecord(
   if (!app) {
     return { formError: "You do not have access to this application." };
   }
+  if (app.archived) {
+    return { formError: "This application is archived and no longer accepts responses." };
+  }
 
   const result = parseRecord(app.schema, formData);
   if (!result.ok) {
