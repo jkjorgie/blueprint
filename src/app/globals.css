@@ -9,21 +9,26 @@
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
 
-  --color-brand-50: #eef2ff;
-  --color-brand-100: #e0e7ff;
-  --color-brand-600: #4f46e5;
-  --color-brand-700: #4338ca; /* 8.5:1 on white */
-  --color-brand-800: #3730a3;
+  /* Blueprint blue on slate neutrals. Ratios are against --color-surface. */
+  --color-brand-50: #eef3fd;
+  --color-brand-100: #dbe5fb;
+  --color-brand-600: #2a5fe0;
+  --color-brand-700: #1e4fcf; /* 6.8:1 as text; 6.8:1 with white text on it */
+  --color-brand-800: #183f9f; /* 9.3:1 with white text on it */
+  --color-brand-900: #122c6e; /* 11.7:1 on brand-50 */
 
   --color-surface: #ffffff;
-  --color-surface-muted: #f5f6f8;
-  --color-ink: #16181d;
-  --color-ink-muted: #4b5563; /* 7.5:1 on white */
-  --color-line: #d4d7de;
-  --color-danger: #b42318; /* 6.4:1 on white */
+  --color-surface-muted: #f6f7f9;
+  --color-ink: #0f172a; /* 17.9:1 */
+  --color-ink-muted: #4b5563; /* 7.6:1, 7.1:1 on surface-muted */
+  --color-line: #d6dae2; /* decorative dividers only */
+  --color-input-border: #7c8696; /* 3.7:1, meets the 3:1 control boundary rule */
+  --color-danger: #b42318; /* 6.6:1 */
   --color-danger-soft: #fef3f2;
-  --color-success: #067647;
-  --color-focus: #1d4ed8;
+  --color-success: #0b7a4b; /* 5.4:1 */
+  --color-warning: #a15c07; /* 5.2:1 */
+  --color-warning-soft: #fdf4e7;
+  --color-focus: #1e4fcf; /* 6.8:1, well over the 3:1 focus indicator rule */
 }
 
 @layer base {
@@ -74,6 +79,18 @@
     @apply bg-danger text-white hover:bg-[#8f1c13];
   }
 
+  .notice {
+    @apply rounded-md p-3 text-sm;
+  }
+
+  .notice-info {
+    @apply bg-brand-50 text-brand-900;
+  }
+
+  .notice-warning {
+    @apply bg-warning-soft text-warning;
+  }
+
   .nav-link {
     @apply text-sm font-medium text-ink-muted hover:text-ink;
   }
@@ -83,7 +100,7 @@
   }
 
   .input {
-    @apply block w-full rounded-md border border-line bg-surface px-3 py-2 text-ink placeholder:text-ink-muted aria-[invalid=true]:border-danger;
+    @apply block w-full rounded-md border border-input-border bg-surface px-3 py-2 text-ink placeholder:text-ink-muted aria-[invalid=true]:border-danger;
   }
 
   .field-hint {

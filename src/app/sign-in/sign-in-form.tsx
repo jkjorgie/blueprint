@@ -1,12 +1,16 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { signInAction, type SignInState } from "@/app/actions/auth";
 
 const initialState: SignInState = {};
 
 export function SignInForm({ callbackUrl }: { callbackUrl: string }) {
   const [state, formAction, pending] = useActionState(signInAction, initialState);
+  // Controlled so the address survives a wrong-password attempt. React resets
+  // the form after the action runs; the password clearing is fine, the email
+  // clearing is not.
+  const [email, setEmail] = useState("");
   const errorId = state.error ? "sign-in-error" : undefined;
 
   return (
@@ -23,7 +27,16 @@ export function SignInForm({ callbackUrl }: { callbackUrl: string }) {
         <label htmlFor="email" className="label">
           Email
         </label>
-        <input id="email" name="email" type="email" autoComplete="email" required className="input" />
+        <input
+          id="email"
+          name="email"
+          type="email"
+          autoComplete="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="input"
+        />
       </div>
 
       <div>

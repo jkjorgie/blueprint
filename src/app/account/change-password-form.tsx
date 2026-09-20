@@ -37,7 +37,7 @@ export function ChangePasswordForm() {
         <p
           id="change-password-success"
           role="status"
-          className="rounded-md bg-brand-50 p-3 text-sm font-medium text-brand-800"
+          className="notice notice-info font-medium"
         >
           Your password has been changed.
         </p>

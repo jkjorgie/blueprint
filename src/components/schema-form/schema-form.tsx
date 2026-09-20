@@ -176,7 +176,7 @@ function SchemaField({ field, id, error, value, onChange }: FieldProps) {
           type="checkbox"
           checked={value === true}
           onChange={(e) => onChange(e.target.checked)}
-          className="size-4 rounded border-line"
+          className="size-4 rounded border-input-border"
         />
       );
       break;

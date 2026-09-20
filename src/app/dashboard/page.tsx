@@ -25,7 +25,7 @@ export default async function DashboardPage({ searchParams }: Props) {
         You are signed in as <strong className="text-ink">{roleLabels[user.role]}</strong>.
       </p>
       {status && (
-        <p role="status" className="mt-6 rounded-md bg-brand-50 p-3 text-sm text-brand-800">
+        <p role="status" className="notice notice-info mt-6">
           {status}
         </p>
       )}

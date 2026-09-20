@@ -56,7 +56,7 @@ export default async function AppPage({ params, searchParams }: Props) {
       </div>
 
       {saved === "1" && (
-        <p role="status" className="mt-6 rounded-md bg-brand-50 p-3 text-sm text-brand-800">
+        <p role="status" className="notice notice-info mt-6">
           Your response was saved.{" "}
           <Link href={responsesHref} className="font-medium underline">
             View responses
