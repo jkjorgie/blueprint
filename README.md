@@ -2,7 +2,7 @@
 
 Blueprint turns a JSON table definition into a working, accessible web app. A business analyst describes their fields, publishes the app, and their end users get create and edit forms with validation plus a searchable, sortable list view. Every generated interface targets WCAG 2.1 AA.
 
-This is our CSE 499 capstone project. The plan is in [project-plan/project-plan.md](project-plan/project-plan.md), open tasks are in [docs/backlog.md](docs/backlog.md), and how we work is in [CONTRIBUTING.md](CONTRIBUTING.md).
+This is our CSE 499 capstone project.
 
 ## Team
 

@@ -71,7 +71,7 @@ describe("MemberApps", () => {
     // only way to prove the filter is there.
     expect(findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { userId: "user-1", application: { published: true } },
+        where: { userId: "user-1", application: { published: true, archivedAt: null } },
       }),
     );
   });

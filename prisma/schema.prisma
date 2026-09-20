@@ -52,6 +52,11 @@ model Application {
   schema    Json
   published Boolean @default(false)
 
+  // Set when the analyst archives a draft that already has responses. An
+  // archived application is read-only: hidden from members, no new responses,
+  // and shown in a collapsed section on the analyst's dashboard.
+  archivedAt DateTime?
+
   members AppMembership[]
   records DataRecord[]
 

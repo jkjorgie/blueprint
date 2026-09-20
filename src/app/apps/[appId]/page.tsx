@@ -33,15 +33,26 @@ export default async function AppPage({ params, searchParams }: Props) {
         <div>
           <h1 className="text-3xl">{app.name}</h1>
           {app.description && <p className="mt-2 text-ink-muted">{app.description}</p>}
-          {!app.published && (
-            <p className="mt-2 text-sm font-medium text-ink-muted">
-              Draft. Only you can see this application until you publish it.
-            </p>
+          {app.archived ? (
+            <p className="mt-2 text-sm font-medium text-ink-muted">Archived.</p>
+          ) : (
+            !app.published && (
+              <p className="mt-2 text-sm font-medium text-ink-muted">
+                Draft. Only you can see this application until you publish it.
+              </p>
+            )
           )}
         </div>
-        <Link href={responsesHref} className="btn btn-secondary">
-          View responses
-        </Link>
+        <div className="flex flex-wrap gap-3">
+          {app.isOwner && (
+            <Link href={`/apps/${app.id}/edit`} className="btn btn-secondary">
+              Edit application
+            </Link>
+          )}
+          <Link href={responsesHref} className="btn btn-secondary">
+            View responses
+          </Link>
+        </div>
       </div>
 
       {saved === "1" && (
@@ -54,14 +65,20 @@ export default async function AppPage({ params, searchParams }: Props) {
         </p>
       )}
 
-      <section aria-labelledby="response-form-heading" className="mt-8 max-w-2xl">
-        <h2 id="response-form-heading" className="text-xl">
-          Submit a response
-        </h2>
-        <div className="mt-4">
-          <SchemaForm schema={app.schema} action={action} submitLabel="Submit" />
-        </div>
-      </section>
+      {app.archived ? (
+        <p className="mt-8 rounded-md border border-line bg-surface-muted p-4 text-ink-muted">
+          This application is archived and no longer accepts responses. Restore it from the edit page to reopen it.
+        </p>
+      ) : (
+        <section aria-labelledby="response-form-heading" className="mt-8 max-w-2xl">
+          <h2 id="response-form-heading" className="text-xl">
+            Submit a response
+          </h2>
+          <div className="mt-4">
+            <SchemaForm schema={app.schema} action={action} submitLabel="Submit" />
+          </div>
+        </section>
+      )}
     </div>
   );
 }

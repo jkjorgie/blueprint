@@ -62,6 +62,16 @@ describe("RecordsTable", () => {
     expect(second[2].textContent).toBe("");
   });
 
+  it("ignores data for fields that were removed from the schema", () => {
+    const withExtra: RecordRow[] = [
+      { id: "rec-3", data: { title: "Kept", reproducible: true, reported_on: "2026-09-01", severity: "High" }, createdAt: new Date() },
+    ];
+    render(<RecordsTable schema={schema} records={withExtra} />);
+    expect(screen.getAllByRole("columnheader")).toHaveLength(4);
+    expect(screen.getAllByRole("row")[1].querySelectorAll("td")).toHaveLength(4);
+    expect(screen.queryByText("High")).not.toBeInTheDocument();
+  });
+
   it("names the table for screen readers", () => {
     render(<RecordsTable schema={schema} records={records} />);
     expect(screen.getByRole("table")).toHaveAccessibleName("Responses to Bug Reports");

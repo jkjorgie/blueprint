@@ -70,6 +70,10 @@
     @apply border border-line bg-surface text-ink hover:bg-surface-muted;
   }
 
+  .btn-danger {
+    @apply bg-danger text-white hover:bg-[#8f1c13];
+  }
+
   .nav-link {
     @apply text-sm font-medium text-ink-muted hover:text-ink;
   }

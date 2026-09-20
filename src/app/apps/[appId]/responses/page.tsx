@@ -34,11 +34,16 @@ export default async function ResponsesPage({ params }: Props) {
   return (
     <div className="container-page py-12">
       <h1 className="text-3xl">{app.name}: responses</h1>
-      <p className="mt-2">
-        <Link href={`/apps/${app.id}`} className="font-medium underline">
-          Back to {app.name}
+      <div className="mt-3 flex flex-wrap gap-3">
+        <Link href={`/apps/${app.id}`} className="btn btn-secondary">
+          Go to application
         </Link>
-      </p>
+        {app.isOwner && (
+          <Link href={`/apps/${app.id}/edit`} className="btn btn-secondary">
+            Edit application
+          </Link>
+        )}
+      </div>
       <div className="mt-8">
         {/* app.schema is already parsed and validated by getAppForUser, so the
             table can trust its shape without re-checking it. */}

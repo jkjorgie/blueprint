@@ -11,6 +11,7 @@ export type AppForUser = {
   name: string;
   description: string | null;
   published: boolean;
+  archived: boolean;
   ownerId: string;
   schema: AppSchema;
   isOwner: boolean;
@@ -20,9 +21,9 @@ export async function getAppForUser(appId: string, user: CurrentUser): Promise<A
   const app = await db.application.findFirst({
     where: {
       id: appId,
-      OR: [{ ownerId: user.id }, { members: { some: { userId: user.id } }, published: true }],
+      OR: [{ ownerId: user.id }, { members: { some: { userId: user.id } }, published: true, archivedAt: null }],
     },
-    select: { id: true, name: true, description: true, published: true, ownerId: true, schema: true },
+    select: { id: true, name: true, description: true, published: true, archivedAt: true, ownerId: true, schema: true },
   });
   if (!app) return null;
 
@@ -31,5 +32,6 @@ export async function getAppForUser(appId: string, user: CurrentUser): Promise<A
     throw new Error(`Application ${app.id} has an invalid stored schema: ${parsed.errors.join("; ")}`);
   }
 
-  return { ...app, schema: parsed.schema, isOwner: app.ownerId === user.id };
+  const { archivedAt, ...rest } = app;
+  return { ...rest, schema: parsed.schema, archived: archivedAt !== null, isOwner: app.ownerId === user.id };
 }
