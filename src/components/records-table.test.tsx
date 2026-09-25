@@ -32,18 +32,47 @@ const records: RecordRow[] = [
   },
 ];
 
+const appId = "app-1";
+
 describe("RecordsTable", () => {
-  it("renders a column per schema field plus Submitted", () => {
-    render(<RecordsTable schema={schema} records={records} />);
+  it("renders a column per schema field plus Submitted and Actions", () => {
+    render(<RecordsTable schema={schema} records={records} appId={appId} />);
 
     const headers = screen.getAllByRole("columnheader").map((th) => th.textContent);
     // Asserting the whole array in order, not just membership: a column that
     // drifts out of position would still pass individual checks.
-    expect(headers).toEqual(["Title", "Reproducible every time", "Reported on", "Submitted"]);
+    expect(headers).toEqual([
+      "Title",
+      "Reproducible every time",
+      "Reported on",
+      "Submitted",
+      "Actions",
+    ]);
+  });
+
+  it("renders edit and delete links for each response", () => {
+    render(<RecordsTable schema={schema} records={records} appId={appId} />);
+
+    expect(screen.getByRole("link", { name: "Edit response 1" })).toHaveAttribute(
+      "href",
+      "/apps/app-1/responses/rec-1/edit",
+    );
+    expect(screen.getByRole("link", { name: "Delete response 1" })).toHaveAttribute(
+      "href",
+      "/apps/app-1/responses/rec-1/delete",
+    );
+    expect(screen.getByRole("link", { name: "Edit response 2" })).toHaveAttribute(
+      "href",
+      "/apps/app-1/responses/rec-2/edit",
+    );
+    expect(screen.getByRole("link", { name: "Delete response 2" })).toHaveAttribute(
+      "href",
+      "/apps/app-1/responses/rec-2/delete",
+    );
   });
 
   it("formats booleans, dates, and missing values", () => {
-    render(<RecordsTable schema={schema} records={records} />);
+    render(<RecordsTable schema={schema} records={records} appId={appId} />);
 
     const rows = screen.getAllByRole("row");
     // rows[0] is the header row, so the data rows start at index 1.
@@ -64,28 +93,39 @@ describe("RecordsTable", () => {
 
   it("ignores data for fields that were removed from the schema", () => {
     const withExtra: RecordRow[] = [
-      { id: "rec-3", data: { title: "Kept", reproducible: true, reported_on: "2026-09-01", severity: "High" }, createdAt: new Date() },
+      {
+        id: "rec-3",
+        data: {
+          title: "Kept",
+          reproducible: true,
+          reported_on: "2026-09-01",
+          severity: "High",
+        },
+        createdAt: new Date(),
+      },
     ];
-    render(<RecordsTable schema={schema} records={withExtra} />);
-    expect(screen.getAllByRole("columnheader")).toHaveLength(4);
-    expect(screen.getAllByRole("row")[1].querySelectorAll("td")).toHaveLength(4);
+    render(<RecordsTable schema={schema} records={withExtra} appId={appId} />);
+    expect(screen.getAllByRole("columnheader")).toHaveLength(5);
+    expect(screen.getAllByRole("row")[1].querySelectorAll("td")).toHaveLength(5);
     expect(screen.queryByText("High")).not.toBeInTheDocument();
   });
 
   it("names the table for screen readers", () => {
-    render(<RecordsTable schema={schema} records={records} />);
+    render(<RecordsTable schema={schema} records={records} appId={appId} />);
     expect(screen.getByRole("table")).toHaveAccessibleName("Responses to Bug Reports");
   });
 
   it("shows a paragraph instead of an empty table when there are no responses", () => {
-    render(<RecordsTable schema={schema} records={[]} />);
+    render(<RecordsTable schema={schema} records={[]} appId={appId} />);
 
     expect(screen.getByText("No responses yet.")).toBeInTheDocument();
     expect(screen.queryByRole("table")).not.toBeInTheDocument();
   });
 
   it("has no detectable accessibility violations", async () => {
-    const { container } = render(<RecordsTable schema={schema} records={records} />);
+    const { container } = render(
+      <RecordsTable schema={schema} records={records} appId={appId} />,
+    );
     expect(await axe(container)).toHaveNoViolations();
   });
 });
@@ -105,7 +145,9 @@ describe("formatValue", () => {
   });
 
   it("renders the stored calendar day, not the UTC one", () => {
-    expect(formatValue(date, "2026-09-03")).toBe(new Date("2026-09-03T00:00:00").toLocaleDateString());
+    expect(formatValue(date, "2026-09-03")).toBe(
+      new Date("2026-09-03T00:00:00").toLocaleDateString(),
+    );
   });
 
   it("falls back to the raw value for an unparseable date", () => {
