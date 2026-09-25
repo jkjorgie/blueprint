@@ -47,7 +47,11 @@ export default async function ResponsesPage({ params }: Props) {
       <div className="mt-8">
         {/* app.schema is already parsed and validated by getAppForUser, so the
             table can trust its shape without re-checking it. */}
-        <RecordsTable schema={app.schema} records={records} />
+        <RecordsTable
+          schema={app.schema}
+          records={records}
+          appId={app.id}
+        />
       </div>
     </div>
   );

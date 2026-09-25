@@ -39,3 +39,69 @@ export async function createRecord(
   revalidatePath(`/apps/${app.id}/responses`);
   redirect(`/apps/${app.id}?saved=1`);
 }
+
+export async function updateRecord(
+  applicationId: string,
+  responseId: string,
+  _previous: RecordFormState,
+  formData: FormData,
+): Promise<RecordFormState> {
+  const user = await requireUser();
+
+  const app = await getAppForUser(applicationId, user);
+  if (!app) {
+    return { formError: "You do not have access to this application." };
+  }
+
+  const record = await db.dataRecord.findFirst({
+    where: { id: responseId, applicationId: app.id },
+    select: { id: true },
+  });
+
+  if (!record) {
+    return { formError: "Response not found." };
+  }
+
+  const result = parseRecord(app.schema, formData);
+  if (!result.ok) {
+    return { errors: result.errors, values: rawValues(app.schema, formData) };
+  }
+
+  // TODO: Sprint 3 — replace this with the appropriate role/permission check.
+  await db.dataRecord.update({
+    where: { id: record.id },
+    data: { data: result.data },
+  });
+
+  revalidatePath(`/apps/${app.id}/responses`);
+  redirect(`/apps/${app.id}/responses`);
+}
+
+export async function deleteRecord(
+  applicationId: string,
+  responseId: string,
+): Promise<void> {
+  const user = await requireUser();
+
+  const app = await getAppForUser(applicationId, user);
+  if (!app) {
+    return;
+  }
+
+  const record = await db.dataRecord.findFirst({
+    where: { id: responseId, applicationId: app.id },
+    select: { id: true },
+  });
+
+  if (!record) {
+    return;
+  }
+
+  // TODO: Sprint 3 — replace this with the appropriate role/permission check.
+  await db.dataRecord.delete({
+    where: { id: record.id },
+  });
+
+  revalidatePath(`/apps/${app.id}/responses`);
+  redirect(`/apps/${app.id}/responses`);
+}
