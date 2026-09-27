@@ -76,6 +76,27 @@ describe("response server actions", () => {
     expect(update).not.toHaveBeenCalled();
     });
 
+    it("refuses to update a response on an archived application", async () => {
+    getAppForUser.mockResolvedValue({ ...app, archived: true });
+    findFirst.mockResolvedValue({ id: "r1" });
+
+    const formData = new FormData();
+    formData.set("title", "Changed");
+    const result = await updateRecord("app-1", "r1", {}, formData);
+
+    expect(result.formError).toMatch(/archived/);
+    expect(update).not.toHaveBeenCalled();
+    });
+
+    it("refuses to delete a response on an archived application", async () => {
+    getAppForUser.mockResolvedValue({ ...app, archived: true });
+    findFirst.mockResolvedValue({ id: "r1" });
+
+    await deleteResponse("app-1", "r1");
+
+    expect(deleteRecord).not.toHaveBeenCalled();
+    });
+
     it("refuses to delete a response from another application", async () => {
     findFirst.mockResolvedValue(null);
 
