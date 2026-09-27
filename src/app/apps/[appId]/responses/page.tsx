@@ -33,7 +33,8 @@ export default async function ResponsesPage({ params, searchParams }: Props) {
   // Only reached once access is settled, so this query cannot leak another
   // application's responses.
   const records = await db.dataRecord.findMany({
-    where: { applicationId: app.id },
+    // Members without the all-responses scope see only what they submitted.
+    where: { applicationId: app.id, ...(app.permissions.scope === "own" ? { createdById: user.id } : {}) },
     orderBy: { createdAt: "desc" },
     select: { id: true, data: true, createdAt: true },
   });
@@ -48,6 +49,7 @@ export default async function ResponsesPage({ params, searchParams }: Props) {
   return (
     <div className="container-page py-12">
       <h1 className="text-3xl">{app.name}: responses</h1>
+      {app.permissions.scope === "own" && <p className="mt-1 text-sm text-ink-muted">Showing only the responses you submitted.</p>}
       <div className="mt-3 flex flex-wrap gap-3">
         <Link href={`/apps/${app.id}`} className="btn btn-secondary">
           Go to application
@@ -106,7 +108,13 @@ export default async function ResponsesPage({ params, searchParams }: Props) {
         <div className={query ? "mt-4" : "mt-8"}>
           {/* app.schema is already parsed and validated by getAppForUser, so the
               table can trust its shape without re-checking it. */}
-          <RecordsTable schema={app.schema} records={shown} appId={app.archived ? undefined : app.id} />
+          <RecordsTable
+            schema={app.schema}
+            records={shown}
+            appId={app.archived || !(app.permissions.edit || app.permissions.delete) ? undefined : app.id}
+            canEdit={app.permissions.edit}
+            canDelete={app.permissions.delete}
+          />
         </div>
       )}
     </div>

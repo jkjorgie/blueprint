@@ -44,12 +44,16 @@ export function RecordsTable({
   schema,
   records,
   appId,
+  canEdit = true,
+  canDelete = true,
 }: {
   schema: AppSchema;
   records: RecordRow[];
-  // When set, each row gets Edit and Delete links. Left out for archived
-  // applications, which are read-only.
+  // When set, each row gets action links. Left out for archived applications
+  // and for users whose role allows neither edit nor delete.
   appId?: string;
+  canEdit?: boolean;
+  canDelete?: boolean;
 }) {
   // A sentence, not an empty table. A table with headers and no rows reads as
   // broken rather than as "nothing here yet".
@@ -107,20 +111,24 @@ export function RecordsTable({
                 {appId && (
                   <td className={cell}>
                     <div className="flex gap-3">
-                      <Link
-                        href={`/apps/${appId}/responses/${record.id}/edit`}
-                        className="underline"
-                        aria-label={`Edit response ${rowNumber}`}
-                      >
-                        Edit
-                      </Link>
-                      <Link
-                        href={`/apps/${appId}/responses/${record.id}/delete`}
-                        className="underline"
-                        aria-label={`Delete response ${rowNumber}`}
-                      >
-                        Delete
-                      </Link>
+                      {canEdit && (
+                        <Link
+                          href={`/apps/${appId}/responses/${record.id}/edit`}
+                          className="underline"
+                          aria-label={`Edit response ${rowNumber}`}
+                        >
+                          Edit
+                        </Link>
+                      )}
+                      {canDelete && (
+                        <Link
+                          href={`/apps/${appId}/responses/${record.id}/delete`}
+                          className="underline"
+                          aria-label={`Delete response ${rowNumber}`}
+                        >
+                          Delete
+                        </Link>
+                      )}
                     </div>
                   </td>
                 )}

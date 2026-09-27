@@ -56,7 +56,15 @@ describe("ResponsesPage search", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     requireUser.mockResolvedValue({ id: "user-1", email: "user@blueprint.local", role: "END_USER" });
-    getAppForUser.mockResolvedValue({ id: "app-1", name: "Bug Reports", schema, isOwner: false });
+    getAppForUser.mockResolvedValue({
+      id: "app-1",
+      name: "Bug Reports",
+      schema,
+      isOwner: false,
+      archived: false,
+      customCss: null,
+      permissions: { view: true, create: true, edit: false, delete: false, scope: "all" },
+    });
     findMany.mockResolvedValue(rows);
   });
 

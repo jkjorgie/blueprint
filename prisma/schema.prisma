@@ -57,8 +57,12 @@ model Application {
   // and shown in a collapsed section on the analyst's dashboard.
   archivedAt DateTime?
 
+  // Analyst-supplied CSS applied inside the application's own pages only.
+  customCss String?
+
   members AppMembership[]
   records DataRecord[]
+  roles   AppRole[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -66,15 +70,39 @@ model Application {
   @@unique([ownerId, slug])
 }
 
-// Grants an end user access to one application.
+// Grants an end user access to one application. Without a role the member
+// can view and create; a role narrows or widens that.
 model AppMembership {
   userId        String
   user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   applicationId String
   application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  roleId        String?
+  role          AppRole?    @relation(fields: [roleId], references: [id], onDelete: SetNull)
   createdAt     DateTime    @default(now())
 
   @@id([userId, applicationId])
+}
+
+// A named bundle of permissions defined by the analyst for one application,
+// for example Editor or Viewer.
+model AppRole {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  name          String
+  canView       Boolean     @default(true)
+  canCreate     Boolean     @default(true)
+  canEdit       Boolean     @default(false)
+  canDelete     Boolean     @default(false)
+  // Whether the permissions above reach every response in the application or
+  // only the ones the member submitted. Members without a role see only their own.
+  allResponses  Boolean     @default(false)
+  memberships   AppMembership[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([applicationId, name])
 }
 
 // One row submitted through a generated form. `data` is keyed by field name.

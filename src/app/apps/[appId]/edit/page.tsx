@@ -14,7 +14,7 @@ import { ApplicationForm } from "@/components/application-form";
 
 type Props = {
   params: Promise<{ appId: string }>;
-  searchParams: Promise<{ saved?: string; published?: string; unpublished?: string; restored?: string; blocked?: string }>;
+  searchParams: Promise<{ saved?: string; published?: string; unpublished?: string; restored?: string; blocked?: string; roleSaved?: string }>;
 };
 
 export const metadata: Metadata = { title: "Edit application" };
@@ -49,6 +49,8 @@ export default async function EditApplicationPage({ params, searchParams }: Prop
         ? "Unpublished. Only you can see this application now."
         : flags.restored
           ? "Restored as a draft."
+          : flags.roleSaved
+            ? "Role saved."
           : flags.blocked === "delete"
             ? "This application cannot be deleted. Only an unpublished draft with no responses can be deleted; archive it instead."
             : flags.blocked === "archive"

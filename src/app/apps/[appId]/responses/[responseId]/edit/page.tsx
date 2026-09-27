@@ -27,11 +27,13 @@ export default async function EditResponsePage({ params }: Props) {
     if (!app) notFound();
     // Archived applications are read-only.
     if (app.archived) notFound();
+    if (!app.permissions.edit) notFound();
 
     const record = await db.dataRecord.findFirst({
     where: {
         id: responseId,
         applicationId: app.id,
+        ...(app.permissions.scope === "own" ? { createdById: user.id } : {}),
     },
     select: {
         id: true,

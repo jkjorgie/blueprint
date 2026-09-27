@@ -24,11 +24,13 @@ export default async function DeleteResponsePage({ params }: Props) {
     if (!app) notFound();
     // Archived applications are read-only.
     if (app.archived) notFound();
+    if (!app.permissions.delete) notFound();
 
     const record = await db.dataRecord.findFirst({
     where: {
         id: responseId,
         applicationId: app.id,
+        ...(app.permissions.scope === "own" ? { createdById: user.id } : {}),
     },
     select: {
         id: true,

@@ -25,6 +25,9 @@ export async function createRecord(
   if (app.archived) {
     return { formError: "This application is archived and no longer accepts responses." };
   }
+  if (!app.permissions.create) {
+    return { formError: "Your role does not allow submitting responses to this application." };
+  }
 
   const result = parseRecord(app.schema, formData);
   if (!result.ok) {
@@ -55,9 +58,12 @@ export async function updateRecord(
   if (app.archived) {
     return { formError: "This application is archived. Its responses can no longer be changed." };
   }
+  if (!app.permissions.edit) {
+    return { formError: "Your role does not allow editing responses." };
+  }
 
   const record = await db.dataRecord.findFirst({
-    where: { id: responseId, applicationId: app.id },
+    where: { id: responseId, applicationId: app.id, ...(app.permissions.scope === "own" ? { createdById: user.id } : {}) },
     select: { id: true },
   });
 
@@ -70,7 +76,6 @@ export async function updateRecord(
     return { errors: result.errors, values: rawValues(app.schema, formData) };
   }
 
-  // TODO: Sprint 3 — replace this with the appropriate role/permission check.
   await db.dataRecord.update({
     where: { id: record.id },
     data: { data: result.data },
@@ -87,13 +92,14 @@ export async function deleteRecord(
   const user = await requireUser();
 
   const app = await getAppForUser(applicationId, user);
-  // Archived apps are read-only, so a delete is refused the same way as no access.
-  if (!app || app.archived) {
+  // Archived apps are read-only, and a role must grant delete. Both are
+  // refused the same way as no access.
+  if (!app || app.archived || !app.permissions.delete) {
     return;
   }
 
   const record = await db.dataRecord.findFirst({
-    where: { id: responseId, applicationId: app.id },
+    where: { id: responseId, applicationId: app.id, ...(app.permissions.scope === "own" ? { createdById: user.id } : {}) },
     select: { id: true },
   });
 
@@ -101,7 +107,6 @@ export async function deleteRecord(
     return;
   }
 
-  // TODO: Sprint 3 — replace this with the appropriate role/permission check.
   await db.dataRecord.delete({
     where: { id: record.id },
   });

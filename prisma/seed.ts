@@ -113,12 +113,19 @@ async function upsertUser(input: {
 // Values stored in DataRecord.data. Keys must match the schema field names.
 type ResponseData = Record<string, string | number | boolean>;
 
+type SeedRole = { name: string; canView: boolean; canCreate: boolean; canEdit: boolean; canDelete: boolean; allResponses: boolean };
+
 type SeedApp = {
   name: string;
   slug: string;
   description: string;
   schema: AppSchema;
   responses: ResponseData[];
+  // Roles to create for the app, and which one the seeded end user gets.
+  // A member with no role can view and create their own responses; Editor
+  // and Viewer reach everyone's.
+  roles?: SeedRole[];
+  memberRole?: string;
 };
 
 // One application, its membership for the end user, and its sample responses.
@@ -142,10 +149,20 @@ async function seedApp(analystId: string, memberId: string, app: SeedApp) {
     },
   });
 
+  let memberRoleId: string | null = null;
+  for (const role of app.roles ?? []) {
+    const saved = await db.appRole.upsert({
+      where: { applicationId_name: { applicationId: application.id, name: role.name } },
+      update: { canView: role.canView, canCreate: role.canCreate, canEdit: role.canEdit, canDelete: role.canDelete, allResponses: role.allResponses },
+      create: { applicationId: application.id, ...role },
+    });
+    if (role.name === app.memberRole) memberRoleId = saved.id;
+  }
+
   await db.appMembership.upsert({
     where: { userId_applicationId: { userId: memberId, applicationId: application.id } },
-    update: {},
-    create: { userId: memberId, applicationId: application.id },
+    update: { roleId: memberRoleId },
+    create: { userId: memberId, applicationId: application.id, roleId: memberRoleId },
   });
 
   // Responses have no natural unique key, so they cannot be upserted. Creating
@@ -171,6 +188,11 @@ const demoApps: SeedApp[] = [
     slug: "bug-reports",
     description: "Track defects reported by the QA team.",
     schema: bugReportSchema,
+    roles: [
+      { name: "Editor", canView: true, canCreate: true, canEdit: true, canDelete: true, allResponses: true },
+      { name: "Viewer", canView: true, canCreate: false, canEdit: false, canDelete: false, allResponses: true },
+    ],
+    memberRole: "Editor",
     responses: [
       {
         title: "Save button does nothing on Safari",
