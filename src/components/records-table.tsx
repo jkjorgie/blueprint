@@ -3,6 +3,7 @@
 // any analyst-defined application.
 //
 // Code says "record" to match the DataRecord model; anything a person reads says "response".
+import Link from "next/link";
 import type { AppSchema, Field } from "@/lib/schema/app-schema";
 
 // DataRecord.data is JSONB, so Prisma types it loosely. The page casts each
@@ -39,7 +40,15 @@ export function formatValue(field: Field, value: unknown): string {
 
 const cell = "border-b border-line py-2 pr-4";
 
-export function RecordsTable({ schema, records }: { schema: AppSchema; records: RecordRow[] }) {
+export function RecordsTable({
+  schema,
+  records,
+  appId,
+}: {
+  schema: AppSchema;
+  records: RecordRow[];
+  appId: string;
+}) {
   // A sentence, not an empty table. A table with headers and no rows reads as
   // broken rather than as "nothing here yet".
   if (records.length === 0) {
@@ -67,11 +76,16 @@ export function RecordsTable({ schema, records }: { schema: AppSchema; records: 
             <th scope="col" className={`${cell} font-medium`}>
               Submitted
             </th>
+            <th scope="col" className={`${cell} font-medium`}>
+              Actions
+            </th>
           </tr>
         </thead>
         <tbody>
-          {records.map((record) => {
+          {records.map((record, index) => {
+            const rowNumber = index + 1;
             const data = record.data as Record<string, unknown>;
+
             return (
               <tr key={record.id}>
                 {/* Iterating schema.fields again, not the keys of data, is what
@@ -83,7 +97,27 @@ export function RecordsTable({ schema, records }: { schema: AppSchema; records: 
                     {formatValue(field, data[field.name])}
                   </td>
                 ))}
-                <td className={cell}>{record.createdAt.toLocaleDateString()}</td>
+                <td className={cell}>
+                  {record.createdAt.toLocaleDateString()}
+                </td>
+                <td className={cell}>
+                  <div className="flex gap-3">
+                    <Link
+                      href={`/apps/${appId}/responses/${record.id}/edit`}
+                      className="underline"
+                      aria-label={`Edit response ${rowNumber}`}
+                    >
+                      Edit
+                    </Link>
+                    <Link
+                      href={`/apps/${appId}/responses/${record.id}/delete`}
+                      className="underline"
+                      aria-label={`Delete response ${rowNumber}`}
+                    >
+                      Delete
+                    </Link>
+                  </div>
+                </td>
               </tr>
             );
           })}
