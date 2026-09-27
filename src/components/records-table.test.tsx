@@ -71,6 +71,13 @@ describe("RecordsTable", () => {
     );
   });
 
+  it("omits the Actions column when no appId is given, as for an archived application", () => {
+    render(<RecordsTable schema={schema} records={records} />);
+    const headers = screen.getAllByRole("columnheader").map((th) => th.textContent);
+    expect(headers).toEqual(["Title", "Reproducible every time", "Reported on", "Submitted"]);
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
+  });
+
   it("formats booleans, dates, and missing values", () => {
     render(<RecordsTable schema={schema} records={records} appId={appId} />);
 

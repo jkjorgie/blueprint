@@ -47,7 +47,9 @@ export function RecordsTable({
 }: {
   schema: AppSchema;
   records: RecordRow[];
-  appId: string;
+  // When set, each row gets Edit and Delete links. Left out for archived
+  // applications, which are read-only.
+  appId?: string;
 }) {
   // A sentence, not an empty table. A table with headers and no rows reads as
   // broken rather than as "nothing here yet".
@@ -76,9 +78,11 @@ export function RecordsTable({
             <th scope="col" className={`${cell} font-medium`}>
               Submitted
             </th>
-            <th scope="col" className={`${cell} font-medium`}>
-              Actions
-            </th>
+            {appId && (
+              <th scope="col" className={`${cell} font-medium`}>
+                Actions
+              </th>
+            )}
           </tr>
         </thead>
         <tbody>
@@ -100,24 +104,26 @@ export function RecordsTable({
                 <td className={cell}>
                   {record.createdAt.toLocaleDateString()}
                 </td>
-                <td className={cell}>
-                  <div className="flex gap-3">
-                    <Link
-                      href={`/apps/${appId}/responses/${record.id}/edit`}
-                      className="underline"
-                      aria-label={`Edit response ${rowNumber}`}
-                    >
-                      Edit
-                    </Link>
-                    <Link
-                      href={`/apps/${appId}/responses/${record.id}/delete`}
-                      className="underline"
-                      aria-label={`Delete response ${rowNumber}`}
-                    >
-                      Delete
-                    </Link>
-                  </div>
-                </td>
+                {appId && (
+                  <td className={cell}>
+                    <div className="flex gap-3">
+                      <Link
+                        href={`/apps/${appId}/responses/${record.id}/edit`}
+                        className="underline"
+                        aria-label={`Edit response ${rowNumber}`}
+                      >
+                        Edit
+                      </Link>
+                      <Link
+                        href={`/apps/${appId}/responses/${record.id}/delete`}
+                        className="underline"
+                        aria-label={`Delete response ${rowNumber}`}
+                      >
+                        Delete
+                      </Link>
+                    </div>
+                  </td>
+                )}
               </tr>
             );
           })}

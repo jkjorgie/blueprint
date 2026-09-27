@@ -1,9 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/session";
 import { getAppForUser } from "@/lib/apps";
 import { deleteRecord } from "@/app/actions/records";
+
+export const metadata: Metadata = { title: "Delete response" };
 
 type Props = {
     params: Promise<{
@@ -19,6 +22,8 @@ export default async function DeleteResponsePage({ params }: Props) {
     const app = await getAppForUser(appId, user);
 
     if (!app) notFound();
+    // Archived applications are read-only.
+    if (app.archived) notFound();
 
     const record = await db.dataRecord.findFirst({
     where: {
@@ -56,7 +61,7 @@ export default async function DeleteResponsePage({ params }: Props) {
 
         <div className="mt-8 flex gap-3">
         <form action={deleteRecord.bind(null, app.id, record.id)}>
-            <button type="submit" className="btn btn-primary">
+            <button type="submit" className="btn btn-danger">
             Delete response
             </button>
         </form>

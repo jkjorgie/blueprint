@@ -52,6 +52,9 @@ export async function updateRecord(
   if (!app) {
     return { formError: "You do not have access to this application." };
   }
+  if (app.archived) {
+    return { formError: "This application is archived. Its responses can no longer be changed." };
+  }
 
   const record = await db.dataRecord.findFirst({
     where: { id: responseId, applicationId: app.id },
@@ -84,7 +87,8 @@ export async function deleteRecord(
   const user = await requireUser();
 
   const app = await getAppForUser(applicationId, user);
-  if (!app) {
+  // Archived apps are read-only, so a delete is refused the same way as no access.
+  if (!app || app.archived) {
     return;
   }
 

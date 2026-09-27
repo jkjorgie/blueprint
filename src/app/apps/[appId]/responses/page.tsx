@@ -106,7 +106,7 @@ export default async function ResponsesPage({ params, searchParams }: Props) {
         <div className={query ? "mt-4" : "mt-8"}>
           {/* app.schema is already parsed and validated by getAppForUser, so the
               table can trust its shape without re-checking it. */}
-          <RecordsTable schema={app.schema} records={shown} appId={app.id} />
+          <RecordsTable schema={app.schema} records={shown} appId={app.archived ? undefined : app.id} />
         </div>
       )}
     </div>

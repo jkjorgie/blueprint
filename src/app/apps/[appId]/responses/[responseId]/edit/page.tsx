@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
@@ -5,6 +6,8 @@ import { requireUser } from "@/lib/session";
 import { getAppForUser } from "@/lib/apps";
 import { SchemaForm } from "@/components/schema-form/schema-form";
 import { updateRecord } from "@/app/actions/records";
+
+export const metadata: Metadata = { title: "Edit response" };
 
 type Props = {
     params: Promise<{
@@ -22,6 +25,8 @@ export default async function EditResponsePage({ params }: Props) {
     const app = await getAppForUser(appId, user);
 
     if (!app) notFound();
+    // Archived applications are read-only.
+    if (app.archived) notFound();
 
     const record = await db.dataRecord.findFirst({
     where: {
