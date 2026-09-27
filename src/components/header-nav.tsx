@@ -10,12 +10,18 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOutAction } from "@/app/actions/auth";
 
-const links = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/account", label: "Account" },
-];
+type Role = "ADMIN" | "ANALYST" | "END_USER";
 
-export function HeaderNav() {
+function linksFor(role: Role) {
+  return [
+    { href: "/dashboard", label: "Dashboard" },
+    ...(role === "ANALYST" ? [{ href: "/users", label: "Users" }] : []),
+    { href: "/account", label: "Account" },
+  ];
+}
+
+export function HeaderNav({ role }: { role: Role }) {
+  const links = linksFor(role);
   const pathname = usePathname();
   // The panel is "open for" one path. Navigating changes the path, so the
   // panel closes on its own without an effect.

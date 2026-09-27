@@ -69,6 +69,10 @@ export default async function AppPage({ params, searchParams }: Props) {
         <p className="mt-8 rounded-md border border-line bg-surface-muted p-4 text-ink-muted">
           This application is archived and no longer accepts responses. Restore it from the edit page to reopen it.
         </p>
+      ) : !app.permissions.create ? (
+        <p className="mt-8 rounded-md border border-line bg-surface-muted p-4 text-ink-muted">
+          Your role lets you view responses but not submit new ones.
+        </p>
       ) : (
         <section aria-labelledby="response-form-heading" className="mt-8 max-w-2xl">
           <h2 id="response-form-heading" className="text-xl">

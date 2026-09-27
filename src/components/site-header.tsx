@@ -15,7 +15,7 @@ export async function SiteHeader() {
           Blueprint
         </Link>
         {signedIn ? (
-          <HeaderNav />
+          <HeaderNav role={session!.user.role} />
         ) : (
           <nav aria-label="Main">
             <Link href="/sign-in" className="btn btn-primary">

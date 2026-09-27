@@ -31,9 +31,14 @@ export async function AnalystApps({ userId }: { userId: string }) {
         <h2 id="my-apps-heading" className="text-xl">
           My applications
         </h2>
-        <Link href="/apps/new" className="btn btn-primary">
-          New application
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/users" className="btn btn-secondary">
+            Manage users
+          </Link>
+          <Link href="/apps/new" className="btn btn-primary">
+            New application
+          </Link>
+        </div>
       </div>
 
       {active.length === 0 ? (

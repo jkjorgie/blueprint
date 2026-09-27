@@ -49,6 +49,7 @@ const app = {
     ],
     },
     archived: false,
+    permissions: { view: true, create: true, edit: true, delete: true, scope: "all" },
 };
 
 describe("response server actions", () => {
@@ -103,5 +104,40 @@ describe("response server actions", () => {
     await deleteResponse("app-1", "response-from-other-app");
 
     expect(deleteRecord).not.toHaveBeenCalled();
+    });
+
+    it("refuses to update when the role lacks edit", async () => {
+    getAppForUser.mockResolvedValue({ ...app, permissions: { view: true, create: true, edit: false, delete: false, scope: "own" } });
+    findFirst.mockResolvedValue({ id: "r1" });
+
+    const formData = new FormData();
+    formData.set("title", "Changed");
+    const result = await updateRecord("app-1", "r1", {}, formData);
+
+    expect(result.formError).toMatch(/role/);
+    expect(update).not.toHaveBeenCalled();
+    });
+
+    it("refuses to delete when the role lacks delete", async () => {
+    getAppForUser.mockResolvedValue({ ...app, permissions: { view: true, create: true, edit: true, delete: false, scope: "all" } });
+    findFirst.mockResolvedValue({ id: "r1" });
+
+    await deleteResponse("app-1", "r1");
+
+    expect(deleteRecord).not.toHaveBeenCalled();
+    });
+
+    it("only looks up the member's own response when the scope is own", async () => {
+    getAppForUser.mockResolvedValue({ ...app, permissions: { view: true, create: true, edit: true, delete: true, scope: "own" } });
+    findFirst.mockResolvedValue(null);
+
+    const formData = new FormData();
+    formData.set("title", "Changed");
+    await updateRecord("app-1", "r1", {}, formData);
+
+    expect(findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: "r1", applicationId: "app-1", createdById: "user-1" } }),
+    );
+    expect(update).not.toHaveBeenCalled();
     });
 });

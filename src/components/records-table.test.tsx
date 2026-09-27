@@ -78,6 +78,12 @@ describe("RecordsTable", () => {
     expect(screen.queryByRole("link")).not.toBeInTheDocument();
   });
 
+  it("shows only the links the permissions allow", () => {
+    render(<RecordsTable schema={schema} records={records} appId={appId} canEdit={false} />);
+    expect(screen.queryByRole("link", { name: /^Edit response/ })).not.toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: /^Delete response/ })).toHaveLength(2);
+  });
+
   it("formats booleans, dates, and missing values", () => {
     render(<RecordsTable schema={schema} records={records} appId={appId} />);
 
