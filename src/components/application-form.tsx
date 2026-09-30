@@ -3,7 +3,7 @@
 // The form analysts use to create or edit an application. Shared by the new
 // and edit pages; the server action passed in decides which one it is.
 //
-// All four fields are controlled, so nothing the analyst typed is lost when
+// All five fields are controlled, so nothing the analyst typed is lost when
 // the action comes back with errors, and the slug can follow the name until
 // the analyst edits it by hand.
 
@@ -36,6 +36,7 @@ export function ApplicationForm({ action, defaultValues, submitLabel, slugFollow
   const [slugTouched, setSlugTouched] = useState(!slugFollowsName);
   const [description, setDescription] = useState(defaultValues.description);
   const [schemaJson, setSchemaJson] = useState(defaultValues.schemaJson);
+  const [customCss, setCustomCss] = useState(defaultValues.customCss);
   const summaryRef = useRef<HTMLDivElement>(null);
 
   const errors = state.errors ?? {};
@@ -44,6 +45,7 @@ export function ApplicationForm({ action, defaultValues, submitLabel, slugFollow
     ...(errors.slug ? [{ id: "app-slug", message: errors.slug }] : []),
     ...(errors.description ? [{ id: "app-description", message: errors.description }] : []),
     ...(errors.schema ?? []).map((message) => ({ id: "app-schema", message })),
+    ...(errors.customCss ? [{ id: "app-css", message: errors.customCss }] : []),
   ];
   const hasErrors = problems.length > 0 || Boolean(state.formError);
 
@@ -185,6 +187,35 @@ export function ApplicationForm({ action, defaultValues, submitLabel, slugFollow
               <li key={i}>{message}</li>
             ))}
           </ul>
+        )}
+      </div>
+
+      <div>
+        <label htmlFor="app-css" className="label">
+          Custom CSS
+        </label>
+        {/* No maxLength here on purpose. The browser would silently cut a long
+            pasted stylesheet off at the limit, leaving broken CSS and no
+            warning. Letting it through means the server's size error shows. */}
+        <textarea
+          id="app-css"
+          name="customCss"
+          rows={10}
+          spellCheck={false}
+          value={customCss}
+          onChange={(e) => setCustomCss(e.target.value)}
+          aria-invalid={errors.customCss ? true : undefined}
+          aria-describedby={describe("app-css-hint", errors.customCss && "app-css-error")}
+          className="input font-mono text-sm"
+        />
+        <p id="app-css-hint" className="field-hint">
+          Optional. Applies only to this application&apos;s pages, which are wrapped in the class{" "}
+          <code className="font-mono">app-theme</code>. Up to 20,000 characters.
+        </p>
+        {errors.customCss && (
+          <p id="app-css-error" className="field-error">
+            {errors.customCss}
+          </p>
         )}
       </div>
 
