@@ -5,7 +5,7 @@ import { axe } from "jest-axe";
 import { STARTER_SCHEMA_JSON, type ApplicationFormState } from "@/lib/schema/application-form";
 import { ApplicationForm } from "./application-form";
 
-const blank = { name: "", slug: "", description: "", schemaJson: STARTER_SCHEMA_JSON };
+const blank = { name: "", slug: "", description: "", schemaJson: STARTER_SCHEMA_JSON, customCss: "" };
 const noop = async (): Promise<ApplicationFormState> => ({});
 
 describe("ApplicationForm", () => {
@@ -47,6 +47,33 @@ describe("ApplicationForm", () => {
     expect(screen.getByRole("textbox", { name: "Name" })).toBeInvalid();
     expect(screen.getByRole("textbox", { name: "Fields (JSON)" })).toBeInvalid();
     expect(screen.getByRole("textbox", { name: "Description" })).toHaveValue("kept");
+  });
+
+  it("shows a labelled Custom CSS box that names the app-theme wrapper", () => {
+    render(<ApplicationForm action={noop} defaultValues={{ ...blank, customCss: "h1 { color: red; }" }} submitLabel="Save" />);
+
+    const css = screen.getByRole("textbox", { name: "Custom CSS" });
+    expect(css).toHaveValue("h1 { color: red; }");
+    expect(css).toHaveAttribute("name", "customCss");
+    expect(css).toHaveAttribute("spellcheck", "false");
+    expect(css).toHaveAccessibleDescription(/app-theme/);
+  });
+
+  it("marks the Custom CSS box and lists its error in the summary", async () => {
+    const message = 'CSS cannot contain the sequence "</".';
+    const action = vi.fn(async (): Promise<ApplicationFormState> => ({ errors: { customCss: message } }));
+    render(<ApplicationForm action={action} defaultValues={blank} submitLabel="Save" />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(action).toHaveBeenCalled());
+
+    const summary = await screen.findByRole("alert");
+    expect(summary).toHaveTextContent("Please fix 1 problem");
+    // The summary link jumps to the box, and the box carries the error.
+    expect(screen.getByRole("link", { name: message })).toHaveAttribute("href", "#app-css");
+    const css = screen.getByRole("textbox", { name: "Custom CSS" });
+    expect(css).toBeInvalid();
+    expect(css).toHaveAccessibleDescription(expect.stringContaining(message));
   });
 
   it("has no detectable accessibility violations", async () => {

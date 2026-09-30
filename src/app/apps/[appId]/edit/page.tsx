@@ -32,6 +32,7 @@ export default async function EditApplicationPage({ params, searchParams }: Prop
       slug: true,
       description: true,
       schema: true,
+      customCss: true,
       published: true,
       archivedAt: true,
       _count: { select: { records: true } },
@@ -140,6 +141,7 @@ export default async function EditApplicationPage({ params, searchParams }: Prop
             slug: app.slug,
             description: app.description ?? "",
             schemaJson: JSON.stringify(app.schema, null, 2),
+            customCss: app.customCss ?? "",
           }}
           submitLabel="Save changes"
           slugFollowsName={false}

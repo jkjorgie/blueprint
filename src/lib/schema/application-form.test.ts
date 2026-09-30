@@ -6,6 +6,7 @@ const valid = {
   slug: "bug-reports",
   description: "",
   schemaJson: STARTER_SCHEMA_JSON,
+  customCss: "",
 };
 
 describe("slugify", () => {
@@ -69,11 +70,76 @@ describe("parseApplicationForm", () => {
   });
 });
 
+describe("custom CSS", () => {
+  const css = "h1 { color: #1e4fcf; }\n.btn-primary { background: #0b7a4b; }";
+
+  it("passes ordinary CSS through unchanged", () => {
+    const result = parseApplicationForm({ ...valid, customCss: css });
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.data.customCss).toBe(css);
+  });
+
+  it("keeps CSS that uses > and other characters HTML would escape", () => {
+    // Child combinators and quoted content are ordinary CSS. Only "</" is refused.
+    const tricky = 'a > span::after { content: "<3"; }';
+    const result = parseApplicationForm({ ...valid, customCss: tricky });
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.data.customCss).toBe(tricky);
+  });
+
+  it("turns empty or whitespace-only CSS into null", () => {
+    for (const blank of ["", "   \n\t  "]) {
+      const result = parseApplicationForm({ ...valid, customCss: blank });
+      expect(result.ok).toBe(true);
+      if (result.ok) expect(result.data.customCss).toBeNull();
+    }
+  });
+
+  it("rejects CSS containing </ anywhere", () => {
+    const attack = "h1 { color: red } </style><script>alert(1)</script>";
+    const result = parseApplicationForm({ ...valid, customCss: attack });
+    expect(result).toEqual({ ok: false, errors: { customCss: 'CSS cannot contain the sequence "</".' } });
+  });
+
+  it("rejects </ even mid-rule, not only as a closing style tag", () => {
+    const result = parseApplicationForm({ ...valid, customCss: "a::after { content: '</' }" });
+    expect(result).toMatchObject({ ok: false, errors: { customCss: expect.stringContaining("</") } });
+  });
+
+  it("accepts exactly 20,000 characters and rejects one more", () => {
+    const atLimit = "a".repeat(20_000);
+    expect(parseApplicationForm({ ...valid, customCss: atLimit }).ok).toBe(true);
+
+    const result = parseApplicationForm({ ...valid, customCss: atLimit + "a" });
+    expect(result).toEqual({ ok: false, errors: { customCss: "Custom CSS must be 20,000 characters or fewer." } });
+  });
+
+  it("reports a CSS problem alongside other field errors", () => {
+    const result = parseApplicationForm({ ...valid, name: "", customCss: "</style>" });
+    expect(result).toMatchObject({
+      ok: false,
+      errors: { name: "Name is required.", customCss: 'CSS cannot contain the sequence "</".' },
+    });
+  });
+});
+
 describe("readApplicationForm", () => {
-  it("reads the four fields and treats missing ones as empty strings", () => {
+  it("reads the five fields and treats missing ones as empty strings", () => {
     const fd = new FormData();
     fd.set("name", "Feedback");
     fd.set("schemaJson", "{}");
-    expect(readApplicationForm(fd)).toEqual({ name: "Feedback", slug: "", description: "", schemaJson: "{}" });
+    expect(readApplicationForm(fd)).toEqual({
+      name: "Feedback",
+      slug: "",
+      description: "",
+      schemaJson: "{}",
+      customCss: "",
+    });
+  });
+
+  it("reads custom CSS from the form", () => {
+    const fd = new FormData();
+    fd.set("customCss", "h1 { color: red; }");
+    expect(readApplicationForm(fd).customCss).toBe("h1 { color: red; }");
   });
 });

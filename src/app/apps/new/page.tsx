@@ -19,7 +19,7 @@ export default async function NewApplicationPage() {
       <div className="mt-8 max-w-2xl">
         <ApplicationForm
           action={createApplication}
-          defaultValues={{ name: "", slug: "", description: "", schemaJson: STARTER_SCHEMA_JSON }}
+          defaultValues={{ name: "", slug: "", description: "", schemaJson: STARTER_SCHEMA_JSON, customCss: "" }}
           submitLabel="Create application"
         />
       </div>
