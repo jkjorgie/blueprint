@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { requireUser } from "@/lib/session";
 import { AnalystApps } from "@/components/analyst-apps";
@@ -37,7 +38,11 @@ export default async function DashboardPage({ searchParams }: Props) {
           <h2 id="admin-heading" className="text-xl">
             Administration
           </h2>
-          <p className="mt-4 text-ink-muted">The admin console is coming soon.</p>
+          <p className="mt-4">
+            <Link href="/admin" className="btn btn-primary">
+              Administration
+            </Link>
+          </p>
         </section>
       )}
     </div>
