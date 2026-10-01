@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { requireUser } from "@/lib/session";
 import { db } from "@/lib/db";
 import { setAnalystActive } from "@/app/actions/admin";
+import { CreateAnalystForm } from "./create-analyst-form";
 
 export const metadata: Metadata = { title: "Administration" };
 
@@ -81,6 +82,10 @@ export default async function AdminPage() {
             </tbody>
         </table>
         </div>
+        <section className="mt-12">
+            <h2 className="text-2xl">New analyst</h2>
+            <CreateAnalystForm />
+        </section>
     </div>
     );
 }
