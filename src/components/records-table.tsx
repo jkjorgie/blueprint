@@ -4,7 +4,9 @@
 //
 // Code says "record" to match the DataRecord model; anything a person reads says "response".
 import Link from "next/link";
+import type { ReactNode } from "react";
 import type { AppSchema, Field } from "@/lib/schema/app-schema";
+import { SUBMITTED, type Sort } from "@/lib/record-sort";
 
 // DataRecord.data is JSONB, so Prisma types it loosely. The page casts each
 // row's data to Record<string, unknown> before reading field names out of it.
@@ -40,12 +42,50 @@ export function formatValue(field: Field, value: unknown): string {
 
 const cell = "border-b border-line py-2 pr-4";
 
+// Turns column headers into sort links. The page supplies hrefFor so each link
+// can carry the current search along; the table only decides what to render.
+export type TableSort = {
+  active: Sort | null;
+  hrefFor: (field: string) => string;
+};
+
+// One sortable (or plain) column header.
+function HeaderCell({ field, label, sort }: { field: string; label: ReactNode; sort?: TableSort }) {
+  const dir = sort?.active?.field === field ? sort.active.dir : null;
+
+  return (
+    <th
+      scope="col"
+      // Only the active column carries aria-sort. Screen readers read it out
+      // as "sorted ascending" or "sorted descending" for that column.
+      aria-sort={dir === "asc" ? "ascending" : dir === "desc" ? "descending" : undefined}
+      className={`${cell} font-medium`}
+    >
+      {sort ? (
+        <Link href={sort.hrefFor(field)} className="inline-flex items-center gap-1 hover:underline">
+          {label}
+          {/* The arrow is for sighted users. aria-hidden stops it being read as
+              "up-pointing triangle", since aria-sort already says the same. */}
+          {dir && (
+            <span aria-hidden="true" className="text-xs">
+              {dir === "asc" ? "▲" : "▼"}
+            </span>
+          )}
+        </Link>
+      ) : (
+        label
+      )}
+    </th>
+  );
+}
+
 export function RecordsTable({
   schema,
   records,
   appId,
   canEdit = true,
   canDelete = true,
+  sort,
 }: {
   schema: AppSchema;
   records: RecordRow[];
@@ -54,6 +94,9 @@ export function RecordsTable({
   appId?: string;
   canEdit?: boolean;
   canDelete?: boolean;
+  // When set, column headers become sort links. Independent of appId, so an
+  // archived application's table still sorts.
+  sort?: TableSort;
 }) {
   // A sentence, not an empty table. A table with headers and no rows reads as
   // broken rather than as "nothing here yet".
@@ -72,16 +115,13 @@ export function RecordsTable({
         <caption className="sr-only">Responses to {schema.title}</caption>
         <thead>
           <tr>
+            {/* scope="col" (set in HeaderCell) ties every cell below to its
+                header, so a screen reader can announce "Severity: High"
+                instead of just "High". */}
             {schema.fields.map((field) => (
-              // scope="col" ties every cell below to this header, so a screen
-              // reader can announce "Severity: High" instead of just "High".
-              <th key={field.name} scope="col" className={`${cell} font-medium`}>
-                {field.label}
-              </th>
+              <HeaderCell key={field.name} field={field.name} label={field.label} sort={sort} />
             ))}
-            <th scope="col" className={`${cell} font-medium`}>
-              Submitted
-            </th>
+            <HeaderCell field={SUBMITTED} label="Submitted" sort={sort} />
             {appId && (
               <th scope="col" className={`${cell} font-medium`}>
                 Actions

@@ -139,3 +139,98 @@ describe("ResponsesPage search", () => {
     expect(await axe(container)).toHaveNoViolations();
   });
 });
+
+describe("ResponsesPage sorting", () => {
+  // Any mix of ?q=, ?sort=, and ?dir=, the way Next.js would pass them.
+  async function renderWith(searchParams: Record<string, string>) {
+    const ui = await ResponsesPage({
+      params: Promise.resolve({ appId: "app-1" }),
+      searchParams: Promise.resolve(searchParams),
+    });
+    return render(ui);
+  }
+
+  // The first cell of each data row, in the order shown.
+  const titles = () =>
+    screen
+      .getAllByRole("row")
+      .slice(1)
+      .map((row) => row.querySelector("td")?.textContent);
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    requireUser.mockResolvedValue({ id: "user-1", email: "user@blueprint.local", role: "END_USER" });
+    getAppForUser.mockResolvedValue({
+      id: "app-1",
+      name: "Bug Reports",
+      schema,
+      isOwner: false,
+      archived: false,
+      customCss: null,
+      permissions: { view: true, create: true, edit: false, delete: false, scope: "all" },
+    });
+    findMany.mockResolvedValue(rows);
+  });
+
+  it("keeps the database order when there is no sort", async () => {
+    await renderWith({});
+    expect(titles()).toEqual(["Save button does nothing on Safari", "Typo on the welcome banner"]);
+  });
+
+  it("sorts by the requested column and direction", async () => {
+    await renderWith({ sort: "title", dir: "desc" });
+
+    expect(titles()).toEqual(["Typo on the welcome banner", "Save button does nothing on Safari"]);
+    expect(screen.getByRole("columnheader", { name: /Title/ })).toHaveAttribute("aria-sort", "descending");
+  });
+
+  it("flips the active column and starts other columns ascending", async () => {
+    await renderWith({ sort: "title", dir: "asc" });
+
+    expect(screen.getByRole("link", { name: "Title" })).toHaveAttribute(
+      "href",
+      "/apps/app-1/responses?sort=title&dir=desc",
+    );
+    expect(screen.getByRole("link", { name: "Submitted" })).toHaveAttribute(
+      "href",
+      "/apps/app-1/responses?sort=submitted&dir=asc",
+    );
+  });
+
+  it("sorts the filtered list and keeps the search in every sort link", async () => {
+    await renderWith({ q: "on", sort: "title", dir: "desc" });
+
+    // "on" matches both rows; the sort then orders them.
+    expect(screen.getByRole("status")).toHaveTextContent("2 responses match 'on'");
+    expect(titles()).toEqual(["Typo on the welcome banner", "Save button does nothing on Safari"]);
+    expect(screen.getByRole("link", { name: "Title" })).toHaveAttribute(
+      "href",
+      "/apps/app-1/responses?q=on&sort=title&dir=asc",
+    );
+    expect(screen.getByRole("link", { name: "Description" })).toHaveAttribute(
+      "href",
+      "/apps/app-1/responses?q=on&sort=description&dir=asc",
+    );
+  });
+
+  it("ignores an unknown sort field instead of failing", async () => {
+    await renderWith({ sort: "nope", dir: "asc" });
+
+    expect(titles()).toEqual(["Save button does nothing on Safari", "Typo on the welcome banner"]);
+    for (const header of screen.getAllByRole("columnheader")) {
+      expect(header).not.toHaveAttribute("aria-sort");
+    }
+  });
+
+  it("ignores a bad direction instead of failing", async () => {
+    await renderWith({ sort: "title", dir: "sideways" });
+
+    expect(titles()).toEqual(["Save button does nothing on Safari", "Typo on the welcome banner"]);
+    expect(screen.getByRole("columnheader", { name: /Title/ })).not.toHaveAttribute("aria-sort");
+  });
+
+  it("has no detectable accessibility violations while sorted and filtered", async () => {
+    const { container } = await renderWith({ q: "on", sort: "submitted", dir: "desc" });
+    expect(await axe(container)).toHaveNoViolations();
+  });
+});
