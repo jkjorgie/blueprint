@@ -145,9 +145,7 @@ export function RecordsTable({
                     {formatValue(field, data[field.name])}
                   </td>
                 ))}
-                <td className={cell}>
-                  {record.createdAt.toLocaleDateString()}
-                </td>
+                <td className={cell}>{record.createdAt.toLocaleDateString()}</td>
                 {appId && (
                   <td className={cell}>
                     <div className="flex gap-3">

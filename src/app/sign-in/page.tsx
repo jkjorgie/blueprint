@@ -30,7 +30,9 @@ export default async function SignInPage({ searchParams }: Props) {
         {deactivated && (
           <div role="alert" className="notice notice-warning mb-6">
             <p className="font-medium">This account has been deactivated.</p>
-            <p className="mt-1">Contact the person who set up your account. You can sign in with a different account below.</p>
+            <p className="mt-1">
+              Contact the person who set up your account. You can sign in with a different account below.
+            </p>
             <form action={signOutAction} className="mt-3">
               <button type="submit" className="btn btn-secondary">
                 Clear this session

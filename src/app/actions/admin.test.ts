@@ -1,37 +1,30 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const {
-    requireUser,
-    updateMany,
-    findUnique,
-    create,
-    hash,
-    revalidatePath,
-} = vi.hoisted(() => ({
-    requireUser: vi.fn(),
-    updateMany: vi.fn(),
-    findUnique: vi.fn(),
-    create: vi.fn(),
-    hash: vi.fn(),
-    revalidatePath: vi.fn(),
+const { requireUser, updateMany, findUnique, create, hash, revalidatePath } = vi.hoisted(() => ({
+  requireUser: vi.fn(),
+  updateMany: vi.fn(),
+  findUnique: vi.fn(),
+  create: vi.fn(),
+  hash: vi.fn(),
+  revalidatePath: vi.fn(),
 }));
 
 vi.mock("@/lib/session", () => ({ requireUser }));
 
 vi.mock("@/lib/db", () => ({
-    db: {
+  db: {
     user: {
-        updateMany,
-        findUnique,
-        create,
+      updateMany,
+      findUnique,
+      create,
     },
-    },
+  },
 }));
 
 vi.mock("bcryptjs", () => ({
-    default: {
+  default: {
     hash,
-    },
+  },
 }));
 
 vi.mock("next/cache", () => ({ revalidatePath }));
@@ -39,75 +32,75 @@ vi.mock("next/cache", () => ({ revalidatePath }));
 import { createAnalyst, setAnalystActive } from "./admin";
 
 describe("setAnalystActive", () => {
-    beforeEach(() => {
+  beforeEach(() => {
     vi.resetAllMocks();
 
     requireUser.mockResolvedValue({
-        id: "admin-1",
-        email: "admin@blueprint.local",
-        role: "ADMIN",
+      id: "admin-1",
+      email: "admin@blueprint.local",
+      role: "ADMIN",
     });
 
     updateMany.mockResolvedValue({ count: 1 });
-    });
+  });
 
-    it("requires an administrator", async () => {
+  it("requires an administrator", async () => {
     await setAnalystActive("analyst-1", false);
 
     expect(requireUser).toHaveBeenCalledWith(["ADMIN"]);
-    });
+  });
 
-    it("filters the update to ANALYST users", async () => {
+  it("filters the update to ANALYST users", async () => {
     await setAnalystActive("analyst-1", false);
 
     expect(updateMany).toHaveBeenCalledWith({
-        where: {
+      where: {
         id: "analyst-1",
         role: "ANALYST",
-        },
-        data: {
+      },
+      data: {
         active: false,
-        },
+      },
     });
-    });
+  });
 
-    it("can reactivate an analyst", async () => {
+  it("can reactivate an analyst", async () => {
     await setAnalystActive("analyst-1", true);
 
     expect(updateMany).toHaveBeenCalledWith({
-        where: {
+      where: {
         id: "analyst-1",
         role: "ANALYST",
-        },
-        data: {
+      },
+      data: {
         active: true,
-        },
+      },
     });
-    });
+  });
 
-    it("revalidates the admin page", async () => {
+  it("revalidates the admin page", async () => {
     await setAnalystActive("analyst-1", false);
 
     expect(revalidatePath).toHaveBeenCalledWith("/admin");
-    });
+  });
 });
 
 describe("createAnalyst", () => {
-    beforeEach(() => {
+  beforeEach(() => {
     vi.resetAllMocks();
 
     requireUser.mockResolvedValue({
-        id: "admin-1",
-        email: "admin@blueprint.local",
-        role: "ADMIN",
+      id: "admin-1",
+      email: "admin@blueprint.local",
+      role: "ADMIN",
     });
 
     findUnique.mockResolvedValue(null);
     create.mockResolvedValue({ id: "analyst-1" });
     hash.mockResolvedValue("hashed-password");
-    });
+  });
 
-    it("refuses a password shorter than 12 characters", async () => {
+  it("refuses a password shorter than 12 characters", async () => {
     const formData = new FormData();
     formData.set("name", "Jane Analyst");
     formData.set("email", "jane@example.com");
@@ -116,14 +109,14 @@ describe("createAnalyst", () => {
     const result = await createAnalyst({}, formData);
 
     expect(result).toEqual({
-        error: "Temporary password must be at least 12 characters.",
+      error: "Temporary password must be at least 12 characters.",
     });
     expect(findUnique).not.toHaveBeenCalled();
     expect(hash).not.toHaveBeenCalled();
     expect(create).not.toHaveBeenCalled();
-    });
+  });
 
-    it("refuses a duplicate email", async () => {
+  it("refuses a duplicate email", async () => {
     findUnique.mockResolvedValue({ id: "existing-user" });
 
     const formData = new FormData();
@@ -134,17 +127,17 @@ describe("createAnalyst", () => {
     const result = await createAnalyst({}, formData);
 
     expect(result).toEqual({
-        error: "An account with that email already exists.",
+      error: "An account with that email already exists.",
     });
     expect(findUnique).toHaveBeenCalledWith({
-        where: { email: "jane@example.com" },
-        select: { id: true },
+      where: { email: "jane@example.com" },
+      select: { id: true },
     });
     expect(hash).not.toHaveBeenCalled();
     expect(create).not.toHaveBeenCalled();
-    });
+  });
 
-    it("hashes the password and creates an ANALYST account", async () => {
+  it("hashes the password and creates an ANALYST account", async () => {
     const formData = new FormData();
     formData.set("name", " Jane Analyst ");
     formData.set("email", " JANE@EXAMPLE.COM ");
@@ -155,19 +148,19 @@ describe("createAnalyst", () => {
     expect(hash).toHaveBeenCalledWith("temporary-password", 10);
 
     expect(create).toHaveBeenCalledWith({
-        data: {
+      data: {
         name: "Jane Analyst",
         email: "jane@example.com",
         passwordHash: "hashed-password",
         role: "ANALYST",
-        },
+      },
     });
 
     expect(revalidatePath).toHaveBeenCalledWith("/admin");
 
     expect(result).toEqual({
-        success: true,
-        name: "Jane Analyst",
+      success: true,
+      name: "Jane Analyst",
     });
-    });
+  });
 });

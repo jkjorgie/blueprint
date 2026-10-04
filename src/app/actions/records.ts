@@ -63,7 +63,11 @@ export async function updateRecord(
   }
 
   const record = await db.dataRecord.findFirst({
-    where: { id: responseId, applicationId: app.id, ...(app.permissions.scope === "own" ? { createdById: user.id } : {}) },
+    where: {
+      id: responseId,
+      applicationId: app.id,
+      ...(app.permissions.scope === "own" ? { createdById: user.id } : {}),
+    },
     select: { id: true },
   });
 
@@ -85,10 +89,7 @@ export async function updateRecord(
   redirect(`/apps/${app.id}/responses`);
 }
 
-export async function deleteRecord(
-  applicationId: string,
-  responseId: string,
-): Promise<void> {
+export async function deleteRecord(applicationId: string, responseId: string): Promise<void> {
   const user = await requireUser();
 
   const app = await getAppForUser(applicationId, user);
@@ -99,7 +100,11 @@ export async function deleteRecord(
   }
 
   const record = await db.dataRecord.findFirst({
-    where: { id: responseId, applicationId: app.id, ...(app.permissions.scope === "own" ? { createdById: user.id } : {}) },
+    where: {
+      id: responseId,
+      applicationId: app.id,
+      ...(app.permissions.scope === "own" ? { createdById: user.id } : {}),
+    },
     select: { id: true },
   });
 

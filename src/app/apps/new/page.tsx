@@ -13,8 +13,8 @@ export default async function NewApplicationPage() {
     <div className="container-page py-12">
       <h1 className="text-3xl">New application</h1>
       <p className="mt-2 max-w-2xl text-ink-muted">
-        Describe the fields your users will fill in. The application starts as a draft that only you can see;
-        publish it from its edit page when it is ready.
+        Describe the fields your users will fill in. The application starts as a draft that only you can see; publish it
+        from its edit page when it is ready.
       </p>
       <div className="mt-8 max-w-2xl">
         <ApplicationForm

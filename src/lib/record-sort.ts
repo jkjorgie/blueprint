@@ -64,7 +64,8 @@ function keyFor(field: Field | null, record: { data: unknown; createdAt: Date })
     case "number": {
       // Stored as a JSON number, but a numeric string from older data still
       // sorts numerically rather than falling to the bottom.
-      const n = typeof value === "number" ? value : typeof value === "string" && value.trim() !== "" ? Number(value) : NaN;
+      const n =
+        typeof value === "number" ? value : typeof value === "string" && value.trim() !== "" ? Number(value) : NaN;
       return Number.isFinite(n) ? n : null;
     }
     case "boolean":

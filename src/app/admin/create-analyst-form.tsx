@@ -1,88 +1,99 @@
 "use client";
 
-import { useActionState } from "react";
-import {
-    createAnalyst,
-    type CreateAnalystState,
-} from "@/app/actions/admin";
+import { useActionState, useState } from "react";
+import { createAnalyst, type CreateAnalystState } from "@/app/actions/admin";
 
 const initialState: CreateAnalystState = {};
 
 export function CreateAnalystForm() {
-    const [state, formAction, pending] = useActionState(
-    createAnalyst,
-    initialState,
-    );
+  const [state, formAction, pending] = useActionState(createAnalyst, initialState);
+  // Name and email are controlled so a validation error does not wipe them.
+  // React resets the form after the action runs; the password clearing is fine.
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
 
-    return (
-    <form action={formAction} className="mt-6 max-w-xl space-y-6">
-        <div>
-        <label htmlFor="name" className="block font-medium">
-            Name
+  // Clear the fields once per successful result, so the form is ready for the
+  // next analyst. Comparing against the last result seen avoids an effect.
+  const [seen, setSeen] = useState(state);
+  if (state !== seen) {
+    setSeen(state);
+    if (state.success) {
+      setName("");
+      setEmail("");
+    }
+  }
+
+  const messageId = state.error ? "create-analyst-error" : state.success ? "create-analyst-success" : undefined;
+
+  return (
+    <form action={formAction} className="card mt-6 max-w-md space-y-5" aria-describedby={messageId}>
+      {state.error && (
+        <p id="create-analyst-error" role="alert" className="notice bg-danger-soft font-medium text-danger">
+          {state.error}
+        </p>
+      )}
+
+      {state.success && state.name && (
+        <p id="create-analyst-success" role="status" className="notice notice-info font-medium">
+          Analyst account created for {state.name}.
+        </p>
+      )}
+
+      <div>
+        <label htmlFor="analyst-name" className="label">
+          Name
         </label>
         <input
-            id="name"
-            name="name"
-            type="text"
-            required
-            className="mt-2 w-full rounded border border-line px-3 py-2"
+          id="analyst-name"
+          name="name"
+          type="text"
+          required
+          maxLength={80}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="input"
         />
-        </div>
+      </div>
 
-        <div>
-        <label htmlFor="email" className="block font-medium">
-            Email
+      <div>
+        <label htmlFor="analyst-email" className="label">
+          Email
         </label>
         <input
-            id="email"
-            name="email"
-            type="email"
-            required
-            className="mt-2 w-full rounded border border-line px-3 py-2"
+          id="analyst-email"
+          name="email"
+          type="email"
+          required
+          autoComplete="off"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="input"
         />
-        </div>
+      </div>
 
-        <div>
-        <label htmlFor="temporaryPassword" className="block font-medium">
-            Temporary password
+      <div>
+        <label htmlFor="analyst-password" className="label">
+          Temporary password
         </label>
+        {/* No minLength: the browser would block the submit with its own
+            tooltip and the server's message would never be announced. */}
         <input
-            id="temporaryPassword"
-            name="temporaryPassword"
-            type="password"
-            minLength={12}
-            required
-            className="mt-2 w-full rounded border border-line px-3 py-2"
-            aria-describedby="temporary-password-hint"
+          id="analyst-password"
+          name="temporaryPassword"
+          type="password"
+          required
+          autoComplete="new-password"
+          aria-describedby="analyst-password-hint"
+          className="input"
         />
-        <p
-            id="temporary-password-hint"
-            className="mt-2 text-sm text-ink-muted"
-        >
-            Must be at least 12 characters. Give this temporary password directly
-            to the analyst.
+        <p id="analyst-password-hint" className="field-hint">
+          Must be at least 12 characters. Give this temporary password directly to the analyst.
         </p>
-        </div>
+      </div>
 
-        {state.error && (
-        <p role="alert" className="text-red-700">
-            {state.error}
-        </p>
-        )}
-
-        {state.success && state.name && (
-        <p role="status" className="text-green-700">
-            Analyst account created for {state.name}.
-        </p>
-        )}
-
-        <button
-        type="submit"
-        className="btn btn-primary"
-        disabled={pending}
-        >
-        {pending ? "Creating..." : "Create analyst"}
-        </button>
+      <button type="submit" className="btn btn-primary" disabled={pending}>
+        {pending ? "Creating…" : "Create analyst"}
+      </button>
     </form>
-    );
+  );
 }

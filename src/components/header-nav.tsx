@@ -16,6 +16,7 @@ function linksFor(role: Role) {
   return [
     { href: "/dashboard", label: "Dashboard" },
     ...(role === "ANALYST" ? [{ href: "/users", label: "Users" }] : []),
+    ...(role === "ADMIN" ? [{ href: "/admin", label: "Admin" }] : []),
     { href: "/account", label: "Account" },
   ];
 }

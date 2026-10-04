@@ -23,11 +23,7 @@ export function normalizeQuery(raw: string | string[] | undefined): string {
 // Keeps the responses where any text or textarea field contains the query,
 // ignoring case. Generic over the row type so the page gets back exactly the
 // rows it passed in, ready for RecordsTable.
-export function searchRecords<T extends { data: unknown }>(
-  schema: AppSchema,
-  records: T[],
-  query: string,
-): T[] {
+export function searchRecords<T extends { data: unknown }>(schema: AppSchema, records: T[], query: string): T[] {
   const needle = query.toLowerCase();
   const fields = schema.fields.filter((field) => SEARCHABLE_TYPES.has(field.type));
 

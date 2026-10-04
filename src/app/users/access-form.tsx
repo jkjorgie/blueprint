@@ -56,7 +56,12 @@ export function AccessForm({ userId, userName, apps }: { userId: string; userNam
               <label htmlFor={selectId} className="sr-only">
                 Role for {app.name}
               </label>
-              <select id={selectId} name={`role-${app.id}`} defaultValue={app.membership?.roleId ?? ""} className="input w-auto py-1 text-sm">
+              <select
+                id={selectId}
+                name={`role-${app.id}`}
+                defaultValue={app.membership?.roleId ?? ""}
+                className="input w-auto py-1 text-sm"
+              >
                 <option value="">Default (own responses: view and create)</option>
                 {app.roles.map((role) => (
                   <option key={role.id} value={role.id}>

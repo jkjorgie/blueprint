@@ -36,8 +36,8 @@ export default async function UsersPage({ searchParams }: Props) {
         <div>
           <h1 className="text-3xl">Users</h1>
           <p className="mt-2 max-w-2xl text-ink-muted">
-            The people who use your applications. Edit a user to choose which applications they can open and what
-            their role allows.
+            The people who use your applications. Edit a user to choose which applications they can open and what their
+            role allows.
           </p>
         </div>
         <Link href="/users/new" className="btn btn-primary">
@@ -83,11 +83,21 @@ export default async function UsersPage({ searchParams }: Props) {
               <caption className="sr-only">Your users</caption>
               <thead>
                 <tr>
-                  <th scope="col" className={`${cell} font-medium`}>Name</th>
-                  <th scope="col" className={`${cell} font-medium`}>Email</th>
-                  <th scope="col" className={`${cell} font-medium`}>Status</th>
-                  <th scope="col" className={`${cell} font-medium`}>Applications</th>
-                  <th scope="col" className={`${cell} font-medium`}>Actions</th>
+                  <th scope="col" className={`${cell} font-medium`}>
+                    Name
+                  </th>
+                  <th scope="col" className={`${cell} font-medium`}>
+                    Email
+                  </th>
+                  <th scope="col" className={`${cell} font-medium`}>
+                    Status
+                  </th>
+                  <th scope="col" className={`${cell} font-medium`}>
+                    Applications
+                  </th>
+                  <th scope="col" className={`${cell} font-medium`}>
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -109,7 +119,11 @@ export default async function UsersPage({ searchParams }: Props) {
                           Edit
                         </Link>
                         <form action={setEndUserActive.bind(null, user.id, !user.active)}>
-                          <button type="submit" className="underline" aria-label={`${user.active ? "Deactivate" : "Reactivate"} ${user.name}`}>
+                          <button
+                            type="submit"
+                            className="underline"
+                            aria-label={`${user.active ? "Deactivate" : "Reactivate"} ${user.name}`}
+                          >
                             {user.active ? "Deactivate" : "Reactivate"}
                           </button>
                         </form>

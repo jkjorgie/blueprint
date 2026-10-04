@@ -16,7 +16,13 @@ export default async function EditUserPage({ params }: Props) {
   const [user, apps] = await Promise.all([
     db.user.findFirst({
       where: { id: userId, role: "END_USER", managedById: analyst.id },
-      select: { id: true, name: true, email: true, active: true, memberships: { select: { applicationId: true, roleId: true } } },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        active: true,
+        memberships: { select: { applicationId: true, roleId: true } },
+      },
     }),
     db.application.findMany({
       where: { ownerId: analyst.id, archivedAt: null },

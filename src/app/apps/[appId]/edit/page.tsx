@@ -10,14 +10,38 @@ import {
   unpublishApplication,
   updateApplication,
 } from "@/app/actions/applications";
+import { createRole, deleteRole } from "@/app/actions/roles";
 import { ApplicationForm } from "@/components/application-form";
+import { RoleForm, type RoleFormValues } from "@/components/role-form";
+import { ROLE_PERMISSIONS } from "@/lib/schema/role-form";
 
 type Props = {
   params: Promise<{ appId: string }>;
-  searchParams: Promise<{ saved?: string; published?: string; unpublished?: string; restored?: string; blocked?: string; roleSaved?: string }>;
+  searchParams: Promise<{
+    saved?: string;
+    published?: string;
+    unpublished?: string;
+    restored?: string;
+    blocked?: string;
+    roleSaved?: string;
+    roleAdded?: string;
+    roleDeleted?: string;
+  }>;
 };
 
 export const metadata: Metadata = { title: "Edit application" };
+
+const cell = "border-b border-line py-2 pr-4";
+
+// Starts from the same defaults as the AppRole columns.
+const NEW_ROLE: RoleFormValues = {
+  name: "",
+  canView: true,
+  canCreate: true,
+  canEdit: false,
+  canDelete: false,
+  allResponses: false,
+};
 
 export default async function EditApplicationPage({ params, searchParams }: Props) {
   const [{ appId }, flags] = await Promise.all([params, searchParams]);
@@ -36,6 +60,18 @@ export default async function EditApplicationPage({ params, searchParams }: Prop
       published: true,
       archivedAt: true,
       _count: { select: { records: true } },
+      roles: {
+        orderBy: { name: "asc" },
+        select: {
+          id: true,
+          name: true,
+          canView: true,
+          canCreate: true,
+          canEdit: true,
+          canDelete: true,
+          allResponses: true,
+        },
+      },
     },
   });
   if (!app) notFound();
@@ -52,11 +88,17 @@ export default async function EditApplicationPage({ params, searchParams }: Prop
           ? "Restored as a draft."
           : flags.roleSaved
             ? "Role saved."
-          : flags.blocked === "delete"
-            ? "This application cannot be deleted. Only an unpublished draft with no responses can be deleted; archive it instead."
-            : flags.blocked === "archive"
-              ? "This application cannot be archived while it is published. Unpublish it first."
-              : null;
+            : flags.roleAdded
+              ? "Role added."
+              : flags.roleDeleted
+                ? "Role deleted."
+                : flags.blocked === "role"
+                  ? "This role is assigned to users and cannot be deleted. Change their role on the Manage users page first."
+                  : flags.blocked === "delete"
+                    ? "This application cannot be deleted. Only an unpublished draft with no responses can be deleted; archive it instead."
+                    : flags.blocked === "archive"
+                      ? "This application cannot be archived while it is published. Unpublish it first."
+                      : null;
   const stateLabel = archived ? "Archived" : app.published ? "Published" : "Draft";
 
   return (
@@ -111,9 +153,7 @@ export default async function EditApplicationPage({ params, searchParams }: Prop
               </>
             )}
           </div>
-          {!archived && app.published && (
-            <p className="text-xs text-ink-muted">Unpublish to archive or delete.</p>
-          )}
+          {!archived && app.published && <p className="text-xs text-ink-muted">Unpublish to archive or delete.</p>}
         </div>
       </div>
 
@@ -147,6 +187,73 @@ export default async function EditApplicationPage({ params, searchParams }: Prop
           slugFollowsName={false}
         />
       </div>
+
+      <section aria-labelledby="roles-heading" className="mt-12 max-w-3xl">
+        <h2 id="roles-heading" className="text-xl">
+          Roles
+        </h2>
+        <p className="mt-2 text-ink-muted">A member with no role can view and create their own responses only.</p>
+
+        {app.roles.length === 0 ? (
+          <p className="mt-4 text-ink-muted">This application has no roles yet.</p>
+        ) : (
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <caption className="sr-only">Roles for {app.name}</caption>
+              <thead>
+                <tr>
+                  <th scope="col" className={`${cell} font-medium`}>
+                    Name
+                  </th>
+                  {ROLE_PERMISSIONS.map((column) => (
+                    <th key={column.key} scope="col" className={`${cell} font-medium`}>
+                      {column.label}
+                    </th>
+                  ))}
+                  <th scope="col" className={`${cell} font-medium`}>
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {app.roles.map((role) => (
+                  <tr key={role.id}>
+                    <th scope="row" className={`${cell} font-medium`}>
+                      {role.name}
+                    </th>
+                    {ROLE_PERMISSIONS.map((column) => (
+                      <td key={column.key} className={cell}>
+                        {role[column.key] ? "Yes" : "No"}
+                      </td>
+                    ))}
+                    <td className={cell}>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <Link
+                          href={`/apps/${app.id}/roles/${role.id}/edit`}
+                          className="underline"
+                          aria-label={`Edit ${role.name}`}
+                        >
+                          Edit
+                        </Link>
+                        <form action={deleteRole.bind(null, app.id, role.id)}>
+                          <button type="submit" className="underline" aria-label={`Delete ${role.name}`}>
+                            Delete
+                          </button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        <h3 className="mt-8 text-lg">Add role</h3>
+        <div className="mt-4 max-w-md">
+          <RoleForm action={createRole.bind(null, app.id)} defaultValues={NEW_ROLE} submitLabel="Add role" />
+        </div>
+      </section>
     </div>
   );
 }

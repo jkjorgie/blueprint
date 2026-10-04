@@ -3,19 +3,20 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { STARTER_SCHEMA_JSON } from "@/lib/schema/application-form";
 
-const { requireUser, findUnique, findFirst, create, update, updateMany, deleteMany, redirect, revalidatePath } = vi.hoisted(() => ({
-  requireUser: vi.fn(),
-  findUnique: vi.fn(),
-  findFirst: vi.fn(),
-  create: vi.fn(),
-  update: vi.fn(),
-  updateMany: vi.fn(),
-  deleteMany: vi.fn(),
-  redirect: vi.fn((url: string) => {
-    throw new Error(`REDIRECT ${url}`);
-  }),
-  revalidatePath: vi.fn(),
-}));
+const { requireUser, findUnique, findFirst, create, update, updateMany, deleteMany, redirect, revalidatePath } =
+  vi.hoisted(() => ({
+    requireUser: vi.fn(),
+    findUnique: vi.fn(),
+    findFirst: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    updateMany: vi.fn(),
+    deleteMany: vi.fn(),
+    redirect: vi.fn((url: string) => {
+      throw new Error(`REDIRECT ${url}`);
+    }),
+    revalidatePath: vi.fn(),
+  }));
 
 vi.mock("@/lib/session", () => ({ requireUser }));
 vi.mock("@/lib/db", () => ({ db: { application: { findUnique, findFirst, create, update, updateMany, deleteMany } } }));
@@ -94,7 +95,9 @@ describe("updateApplication", () => {
 
   it("saves and redirects back to the edit page", async () => {
     findFirst.mockResolvedValueOnce({ id: "app-1" }).mockResolvedValueOnce(null);
-    await expect(updateApplication("app-1", {}, form({ name: "Renamed" }))).rejects.toThrow("REDIRECT /apps/app-1/edit?saved=1");
+    await expect(updateApplication("app-1", {}, form({ name: "Renamed" }))).rejects.toThrow(
+      "REDIRECT /apps/app-1/edit?saved=1",
+    );
     expect(update).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: "app-1" }, data: expect.objectContaining({ name: "Renamed" }) }),
     );
