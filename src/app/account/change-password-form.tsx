@@ -12,11 +12,7 @@ export function ChangePasswordForm() {
 
   // Only ever one message, so one id is enough to point the form's
   // aria-describedby at whichever is showing.
-  const messageId = state.error
-    ? "change-password-error"
-    : state.success
-      ? "change-password-success"
-      : undefined;
+  const messageId = state.error ? "change-password-error" : state.success ? "change-password-success" : undefined;
 
   return (
     <form action={formAction} className="card space-y-5" aria-describedby={messageId}>
@@ -34,11 +30,7 @@ export function ChangePasswordForm() {
       {/* role="status" is the polite counterpart: announced when the user
           pauses, because success does not need to cut them off. */}
       {state.success && (
-        <p
-          id="change-password-success"
-          role="status"
-          className="notice notice-info font-medium"
-        >
+        <p id="change-password-success" role="status" className="notice notice-info font-medium">
           Your password has been changed.
         </p>
       )}

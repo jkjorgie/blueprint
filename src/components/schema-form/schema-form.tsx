@@ -142,7 +142,8 @@ function SchemaField({ field, id, error, value, onChange }: FieldProps) {
   };
 
   const text = typeof value === "string" ? value : "";
-  const onText = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => onChange(e.target.value);
+  const onText = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+    onChange(e.target.value);
 
   let control: React.ReactNode;
   switch (field.type) {
@@ -151,7 +152,16 @@ function SchemaField({ field, id, error, value, onChange }: FieldProps) {
       break;
     case "number":
       control = (
-        <input {...common} type="number" value={text} onChange={onText} min={field.min} max={field.max} step="any" className="input" />
+        <input
+          {...common}
+          type="number"
+          value={text}
+          onChange={onText}
+          min={field.min}
+          max={field.max}
+          step="any"
+          className="input"
+        />
       );
       break;
     case "date":
@@ -181,7 +191,9 @@ function SchemaField({ field, id, error, value, onChange }: FieldProps) {
       );
       break;
     default:
-      control = <input {...common} type="text" value={text} onChange={onText} maxLength={field.maxLength} className="input" />;
+      control = (
+        <input {...common} type="text" value={text} onChange={onText} maxLength={field.maxLength} className="input" />
+      );
   }
 
   const label = (

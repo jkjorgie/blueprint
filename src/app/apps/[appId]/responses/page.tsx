@@ -66,7 +66,9 @@ export default async function ResponsesPage({ params, searchParams }: Props) {
     <AppTheme css={app.customCss}>
       <div className="container-page py-12">
         <h1 className="text-3xl">{app.name}: responses</h1>
-        {app.permissions.scope === "own" && <p className="mt-1 text-sm text-ink-muted">Showing only the responses you submitted.</p>}
+        {app.permissions.scope === "own" && (
+          <p className="mt-1 text-sm text-ink-muted">Showing only the responses you submitted.</p>
+        )}
         <div className="mt-3 flex flex-wrap gap-3">
           <Link href={`/apps/${app.id}`} className="btn btn-secondary">
             Go to application

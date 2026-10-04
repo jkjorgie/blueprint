@@ -14,10 +14,7 @@ export type ChangePasswordState = { error?: string; success?: boolean };
 // length is what actually resists guessing.
 const MIN_LENGTH = 12;
 
-export async function changePassword(
-  _previous: ChangePasswordState,
-  formData: FormData,
-): Promise<ChangePasswordState> {
+export async function changePassword(_previous: ChangePasswordState, formData: FormData): Promise<ChangePasswordState> {
   const user = await requireUser();
 
   const currentPassword = String(formData.get("currentPassword") ?? "");

@@ -7,14 +7,14 @@ This is our CSE 499 capstone project.
 ## Team
 
 Jay Jorgensen (lead)
-    "Success is not final, failure is not fatal: it is the courage to continue that counts." - Winston Churchill
+"Success is not final, failure is not fatal: it is the courage to continue that counts." - Winston Churchill
 
 Marcus Palmer
-    "That which you persist in doing becomes easy to do, not that the nature of the thing has changed but your power to do has increased."
-    Ralph Waldo Emerson
+"That which you persist in doing becomes easy to do, not that the nature of the thing has changed but your power to do has increased."
+Ralph Waldo Emerson
 
 Terrystan Sustal
-    "Success is not an accident, it's a choice. Keep on pressing forward and learn how to fail" - My Basketball Trainer
+"Success is not an accident, it's a choice. Keep on pressing forward and learn how to fail" - My Basketball Trainer
 
 ## Install
 
@@ -44,10 +44,10 @@ That's it. We all share one database, so there is nothing to set up or migrate.
 2. Open http://localhost:3000.
 3. Sign in with one of these. The password for both is `blueprint-demo`.
 
-   | Email | Who they are |
-   |---|---|
+   | Email                   | Who they are                                         |
+   | ----------------------- | ---------------------------------------------------- |
    | analyst@blueprint.local | Business analyst (owns the sample "Bug Reports" app) |
-   | user@blueprint.local | End user (member of "Bug Reports") |
+   | user@blueprint.local    | End user (member of "Bug Reports")                   |
 
 Press `Ctrl+C` in the terminal to stop the app.
 

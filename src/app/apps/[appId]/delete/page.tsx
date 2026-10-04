@@ -27,8 +27,8 @@ export default async function DeleteApplicationPage({ params }: Props) {
       <div className="max-w-xl">
         <h1 className="text-3xl">Delete {app.name}?</h1>
         <p className="mt-4 text-ink-muted">
-          This permanently removes the application and its field definitions. It has no responses, so nothing else
-          is lost. This cannot be undone.
+          This permanently removes the application and its field definitions. It has no responses, so nothing else is
+          lost. This cannot be undone.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <form action={deleteApplication.bind(null, app.id)}>

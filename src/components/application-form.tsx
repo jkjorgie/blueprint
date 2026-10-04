@@ -8,11 +8,7 @@
 // the analyst edits it by hand.
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import {
-  slugify,
-  type ApplicationFormState,
-  type ApplicationFormValues,
-} from "@/lib/schema/application-form";
+import { slugify, type ApplicationFormState, type ApplicationFormValues } from "@/lib/schema/application-form";
 
 export type ApplicationFormAction = (
   previous: ApplicationFormState,

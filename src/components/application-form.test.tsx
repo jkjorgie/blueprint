@@ -25,7 +25,12 @@ describe("ApplicationForm", () => {
 
   it("does not overwrite an existing slug on the edit page", async () => {
     render(
-      <ApplicationForm action={noop} defaultValues={{ ...blank, name: "Old", slug: "old" }} submitLabel="Save" slugFollowsName={false} />,
+      <ApplicationForm
+        action={noop}
+        defaultValues={{ ...blank, name: "Old", slug: "old" }}
+        submitLabel="Save"
+        slugFollowsName={false}
+      />,
     );
     await userEvent.type(screen.getByRole("textbox", { name: "Name" }), " name");
     expect(screen.getByRole("textbox", { name: "Slug" })).toHaveValue("old");
@@ -33,7 +38,10 @@ describe("ApplicationForm", () => {
 
   it("lists every returned error in a focused summary and marks the fields", async () => {
     const action = vi.fn(async (): Promise<ApplicationFormState> => ({
-      errors: { name: "Name is required.", schema: ["title: title is required", "fields: at least one field is required"] },
+      errors: {
+        name: "Name is required.",
+        schema: ["title: title is required", "fields: at least one field is required"],
+      },
     }));
     render(<ApplicationForm action={action} defaultValues={blank} submitLabel="Create" />);
 
@@ -50,7 +58,13 @@ describe("ApplicationForm", () => {
   });
 
   it("shows a labelled Custom CSS box that names the app-theme wrapper", () => {
-    render(<ApplicationForm action={noop} defaultValues={{ ...blank, customCss: "h1 { color: red; }" }} submitLabel="Save" />);
+    render(
+      <ApplicationForm
+        action={noop}
+        defaultValues={{ ...blank, customCss: "h1 { color: red; }" }}
+        submitLabel="Save"
+      />,
+    );
 
     const css = screen.getByRole("textbox", { name: "Custom CSS" });
     expect(css).toHaveValue("h1 { color: red; }");

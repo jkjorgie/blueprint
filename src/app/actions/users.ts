@@ -63,7 +63,11 @@ export async function setEndUserActive(userId: string, active: boolean) {
 
 // One form per user lists every application the analyst owns with a
 // "member" checkbox and a role select. Saving reconciles memberships to match.
-export async function saveUserAccess(userId: string, _previous: UserFormState, formData: FormData): Promise<UserFormState> {
+export async function saveUserAccess(
+  userId: string,
+  _previous: UserFormState,
+  formData: FormData,
+): Promise<UserFormState> {
   const analyst = await requireUser(["ANALYST"]);
 
   const managed = await db.user.findFirst({

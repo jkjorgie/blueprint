@@ -1,9 +1,10 @@
 "use client";
 
-// Name plus four permission checkboxes. Used by the role edit page, and meant
-// to be reused by the role builder's add form.
+// Name plus the permission checkboxes. Used by the role edit page and by the
+// add form in the Roles section of the application edit page.
 import { useActionState } from "react";
 import type { RoleFormState } from "@/app/actions/roles";
+import { ROLE_PERMISSIONS } from "@/lib/schema/role-form";
 
 export type RoleFormValues = {
   name: string;
@@ -13,14 +14,6 @@ export type RoleFormValues = {
   canDelete: boolean;
   allResponses: boolean;
 };
-
-const PERMISSIONS: { key: keyof Omit<RoleFormValues, "name">; label: string; hint: string }[] = [
-  { key: "canView", label: "View", hint: "Open the application and see its responses." },
-  { key: "canCreate", label: "Create", hint: "Submit new responses." },
-  { key: "canEdit", label: "Edit", hint: "Change existing responses." },
-  { key: "canDelete", label: "Delete", hint: "Remove responses." },
-  { key: "allResponses", label: "All responses", hint: "Apply these permissions to every response in the application, not only the ones the member submitted." },
-];
 
 export function RoleForm({
   action,
@@ -44,14 +37,29 @@ export function RoleForm({
         <label htmlFor="role-name" className="label">
           Role name
         </label>
-        <input id="role-name" name="name" type="text" required maxLength={40} defaultValue={defaultValues.name} className="input" />
+        <input
+          id="role-name"
+          name="name"
+          type="text"
+          required
+          maxLength={40}
+          defaultValue={defaultValues.name}
+          className="input"
+        />
       </div>
       <fieldset>
         <legend className="label">Permissions</legend>
         <ul className="space-y-2">
-          {PERMISSIONS.map((p) => (
+          {ROLE_PERMISSIONS.map((p) => (
             <li key={p.key} className="flex items-start gap-2">
-              <input id={`role-${p.key}`} name={p.key} type="checkbox" defaultChecked={defaultValues[p.key]} aria-describedby={`role-${p.key}-hint`} className="mt-1 size-4 rounded border-input-border" />
+              <input
+                id={`role-${p.key}`}
+                name={p.key}
+                type="checkbox"
+                defaultChecked={defaultValues[p.key]}
+                aria-describedby={`role-${p.key}-hint`}
+                className="mt-1 size-4 rounded border-input-border"
+              />
               <div>
                 <label htmlFor={`role-${p.key}`} className="text-sm font-medium text-ink">
                   {p.label}

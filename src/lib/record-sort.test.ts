@@ -63,7 +63,12 @@ describe("normalizeSort", () => {
 
 describe("sortRecords", () => {
   describe("number fields", () => {
-    const rows = [row("ten", { count: 10 }), row("nine", { count: 9 }), row("one", { count: 1 }), row("zero", { count: 0 })];
+    const rows = [
+      row("ten", { count: 10 }),
+      row("nine", { count: 9 }),
+      row("one", { count: 1 }),
+      row("zero", { count: 0 }),
+    ];
 
     it("sorts numerically, not as text", () => {
       // As text, "10" would sort before "9".
@@ -81,7 +86,11 @@ describe("sortRecords", () => {
   });
 
   describe("date fields", () => {
-    const rows = [row("oct", { due: "2026-10-01" }), row("jan", { due: "2026-01-15" }), row("sep", { due: "2026-09-30" })];
+    const rows = [
+      row("oct", { due: "2026-10-01" }),
+      row("jan", { due: "2026-01-15" }),
+      row("sep", { due: "2026-09-30" }),
+    ];
 
     it("sorts chronologically", () => {
       expect(ids(sortRecords(schema, rows, by("due")))).toEqual(["jan", "sep", "oct"]);
@@ -139,11 +148,7 @@ describe("sortRecords", () => {
     });
 
     it("treat null, empty text, and unusable values as missing", () => {
-      const rows = [
-        row("null", { title: null }),
-        row("empty", { title: "" }),
-        row("real", { title: "Bug" }),
-      ];
+      const rows = [row("null", { title: null }), row("empty", { title: "" }), row("real", { title: "Bug" })];
       expect(ids(sortRecords(schema, rows, by("title")))[0]).toBe("real");
 
       const numbers = [row("text", { count: "lots" }), row("real", { count: 3 })];
@@ -174,7 +179,11 @@ describe("sortRecords", () => {
 
   it("keeps the incoming order for ties", () => {
     // Incoming order is newest first, as loaded from the database.
-    const rows = [row("first", { severity: "High" }), row("second", { severity: "High" }), row("third", { severity: "High" })];
+    const rows = [
+      row("first", { severity: "High" }),
+      row("second", { severity: "High" }),
+      row("third", { severity: "High" }),
+    ];
     expect(ids(sortRecords(schema, rows, by("severity")))).toEqual(["first", "second", "third"]);
   });
 

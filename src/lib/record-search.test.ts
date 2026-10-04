@@ -63,7 +63,10 @@ describe("searchRecords", () => {
   });
 
   it("skips rows whose data is not an object", () => {
-    const broken = [{ id: "x", data: null }, { id: "y", data: "Safari" }];
+    const broken = [
+      { id: "x", data: null },
+      { id: "y", data: "Safari" },
+    ];
     expect(searchRecords(schema, broken, "safari")).toEqual([]);
   });
 });

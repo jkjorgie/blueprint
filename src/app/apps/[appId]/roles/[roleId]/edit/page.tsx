@@ -16,7 +16,16 @@ export default async function EditRolePage({ params }: Props) {
 
   const role = await db.appRole.findFirst({
     where: { id: roleId, applicationId: appId, application: { ownerId: analyst.id } },
-    select: { id: true, name: true, canView: true, canCreate: true, canEdit: true, canDelete: true, allResponses: true, application: { select: { name: true } } },
+    select: {
+      id: true,
+      name: true,
+      canView: true,
+      canCreate: true,
+      canEdit: true,
+      canDelete: true,
+      allResponses: true,
+      application: { select: { name: true } },
+    },
   });
   if (!role) notFound();
 

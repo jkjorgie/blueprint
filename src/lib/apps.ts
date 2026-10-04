@@ -38,7 +38,9 @@ export async function getAppForUser(appId: string, user: CurrentUser): Promise<A
       schema: true,
       members: {
         where: { userId: user.id },
-        select: { role: { select: { canView: true, canCreate: true, canEdit: true, canDelete: true, allResponses: true } } },
+        select: {
+          role: { select: { canView: true, canCreate: true, canEdit: true, canDelete: true, allResponses: true } },
+        },
       },
     },
   });

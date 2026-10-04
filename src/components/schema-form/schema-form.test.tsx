@@ -32,7 +32,13 @@ describe("SchemaForm", () => {
   });
 
   it("pre-fills default values", () => {
-    render(<SchemaForm schema={schema} action={noop} defaultValues={{ title: "Hi", severity: "High", reproducible: true }} />);
+    render(
+      <SchemaForm
+        schema={schema}
+        action={noop}
+        defaultValues={{ title: "Hi", severity: "High", reproducible: true }}
+      />,
+    );
     expect(screen.getByRole("textbox", { name: /title/i })).toHaveValue("Hi");
     expect(screen.getByRole("combobox", { name: /severity/i })).toHaveValue("High");
     expect(screen.getByRole("checkbox", { name: /reproducible/i })).toBeChecked();

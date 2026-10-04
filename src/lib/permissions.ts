@@ -21,11 +21,23 @@ export type RoleFlags = {
 };
 
 export const OWNER_PERMISSIONS: Permissions = { view: true, create: true, edit: true, delete: true, scope: "all" };
-export const DEFAULT_MEMBER_PERMISSIONS: Permissions = { view: true, create: true, edit: false, delete: false, scope: "own" };
+export const DEFAULT_MEMBER_PERMISSIONS: Permissions = {
+  view: true,
+  create: true,
+  edit: false,
+  delete: false,
+  scope: "own",
+};
 export const NO_PERMISSIONS: Permissions = { view: false, create: false, edit: false, delete: false, scope: "own" };
 
 export function permissionsFromRole(role: RoleFlags): Permissions {
-  return { view: role.canView, create: role.canCreate, edit: role.canEdit, delete: role.canDelete, scope: role.allResponses ? "all" : "own" };
+  return {
+    view: role.canView,
+    create: role.canCreate,
+    edit: role.canEdit,
+    delete: role.canDelete,
+    scope: role.allResponses ? "all" : "own",
+  };
 }
 
 export function permissionsFor(input: {

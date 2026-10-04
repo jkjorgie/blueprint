@@ -23,8 +23,8 @@ export default function HomePage() {
           From table definition to working app.
         </h1>
         <p className="mt-6 text-lg text-ink-muted">
-          Blueprint reads a JSON description of your fields and renders create and edit forms, validation,
-          and a searchable list view, all built to WCAG 2.1 AA.
+          Blueprint reads a JSON description of your fields and renders create and edit forms, validation, and a
+          searchable list view, all built to WCAG 2.1 AA.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <Link href="/sign-in" className="btn btn-primary">

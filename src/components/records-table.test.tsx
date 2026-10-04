@@ -41,13 +41,7 @@ describe("RecordsTable", () => {
     const headers = screen.getAllByRole("columnheader").map((th) => th.textContent);
     // Asserting the whole array in order, not just membership: a column that
     // drifts out of position would still pass individual checks.
-    expect(headers).toEqual([
-      "Title",
-      "Reproducible every time",
-      "Reported on",
-      "Submitted",
-      "Actions",
-    ]);
+    expect(headers).toEqual(["Title", "Reproducible every time", "Reported on", "Submitted", "Actions"]);
   });
 
   it("renders edit and delete links for each response", () => {
@@ -136,9 +130,7 @@ describe("RecordsTable", () => {
   });
 
   it("has no detectable accessibility violations", async () => {
-    const { container } = render(
-      <RecordsTable schema={schema} records={records} appId={appId} />,
-    );
+    const { container } = render(<RecordsTable schema={schema} records={records} appId={appId} />);
     expect(await axe(container)).toHaveNoViolations();
   });
 });
@@ -245,9 +237,7 @@ describe("formatValue", () => {
   });
 
   it("renders the stored calendar day, not the UTC one", () => {
-    expect(formatValue(date, "2026-09-03")).toBe(
-      new Date("2026-09-03T00:00:00").toLocaleDateString(),
-    );
+    expect(formatValue(date, "2026-09-03")).toBe(new Date("2026-09-03T00:00:00").toLocaleDateString());
   });
 
   it("falls back to the raw value for an unparseable date", () => {

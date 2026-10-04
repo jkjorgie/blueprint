@@ -113,7 +113,14 @@ async function upsertUser(input: {
 // Values stored in DataRecord.data. Keys must match the schema field names.
 type ResponseData = Record<string, string | number | boolean>;
 
-type SeedRole = { name: string; canView: boolean; canCreate: boolean; canEdit: boolean; canDelete: boolean; allResponses: boolean };
+type SeedRole = {
+  name: string;
+  canView: boolean;
+  canCreate: boolean;
+  canEdit: boolean;
+  canDelete: boolean;
+  allResponses: boolean;
+};
 
 type SeedApp = {
   name: string;
@@ -153,7 +160,13 @@ async function seedApp(analystId: string, memberId: string, app: SeedApp) {
   for (const role of app.roles ?? []) {
     const saved = await db.appRole.upsert({
       where: { applicationId_name: { applicationId: application.id, name: role.name } },
-      update: { canView: role.canView, canCreate: role.canCreate, canEdit: role.canEdit, canDelete: role.canDelete, allResponses: role.allResponses },
+      update: {
+        canView: role.canView,
+        canCreate: role.canCreate,
+        canEdit: role.canEdit,
+        canDelete: role.canDelete,
+        allResponses: role.allResponses,
+      },
       create: { applicationId: application.id, ...role },
     });
     if (role.name === app.memberRole) memberRoleId = saved.id;

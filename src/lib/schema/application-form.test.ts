@@ -66,7 +66,10 @@ describe("parseApplicationForm", () => {
 
   it("rejects a description over 300 characters", () => {
     const result = parseApplicationForm({ ...valid, description: "x".repeat(301) });
-    expect(result).toMatchObject({ ok: false, errors: { description: "Description must be 300 characters or fewer." } });
+    expect(result).toMatchObject({
+      ok: false,
+      errors: { description: "Description must be 300 characters or fewer." },
+    });
   });
 });
 

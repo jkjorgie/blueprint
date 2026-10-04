@@ -17,7 +17,11 @@ type Props = { searchParams: Promise<{ deleted?: string; archived?: string }> };
 
 export default async function DashboardPage({ searchParams }: Props) {
   const [user, flags] = await Promise.all([requireUser(), searchParams]);
-  const status = flags.deleted ? "Application deleted." : flags.archived ? "Application archived. Find it under Archived below." : null;
+  const status = flags.deleted
+    ? "Application deleted."
+    : flags.archived
+      ? "Application archived. Find it under Archived below."
+      : null;
 
   return (
     <div className="container-page py-12">

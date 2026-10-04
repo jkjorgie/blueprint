@@ -9,72 +9,65 @@ import { deleteRecord } from "@/app/actions/records";
 export const metadata: Metadata = { title: "Delete response" };
 
 type Props = {
-    params: Promise<{
+  params: Promise<{
     appId: string;
     responseId: string;
-    }>;
+  }>;
 };
 
 export default async function DeleteResponsePage({ params }: Props) {
-    const { appId, responseId } = await params;
+  const { appId, responseId } = await params;
 
-    const user = await requireUser();
-    const app = await getAppForUser(appId, user);
+  const user = await requireUser();
+  const app = await getAppForUser(appId, user);
 
-    if (!app) notFound();
-    // Archived applications are read-only.
-    if (app.archived) notFound();
-    if (!app.permissions.delete) notFound();
+  if (!app) notFound();
+  // Archived applications are read-only.
+  if (app.archived) notFound();
+  if (!app.permissions.delete) notFound();
 
-    const record = await db.dataRecord.findFirst({
+  const record = await db.dataRecord.findFirst({
     where: {
-        id: responseId,
-        applicationId: app.id,
-        ...(app.permissions.scope === "own" ? { createdById: user.id } : {}),
+      id: responseId,
+      applicationId: app.id,
+      ...(app.permissions.scope === "own" ? { createdById: user.id } : {}),
     },
     select: {
-        id: true,
-        data: true,
+      id: true,
+      data: true,
     },
-    });
+  });
 
-    if (!record) notFound();
+  if (!record) notFound();
 
-    const data = record.data as Record<string, unknown>;
-    const firstField = app.schema.fields[0];
-    const summaryValue = data[firstField.name];
+  const data = record.data as Record<string, unknown>;
+  const firstField = app.schema.fields[0];
+  const summaryValue = data[firstField.name];
 
-    return (
+  return (
     <div className="container-page py-12">
-        <h1 className="text-3xl">Delete response</h1>
+      <h1 className="text-3xl">Delete response</h1>
 
-        <p className="mt-4">
-        Are you sure you want to delete this response?
-        </p>
+      <p className="mt-4">Are you sure you want to delete this response?</p>
 
-        <div className="mt-6 rounded border border-line p-4">
+      <div className="mt-6 rounded border border-line p-4">
         <p className="font-medium">{firstField.label}</p>
         <p className="mt-1 text-ink-muted">
-            {summaryValue === undefined || summaryValue === null
-            ? "(No value)"
-            : String(summaryValue)}
+          {summaryValue === undefined || summaryValue === null ? "(No value)" : String(summaryValue)}
         </p>
-        </div>
+      </div>
 
-        <div className="mt-8 flex gap-3">
+      <div className="mt-8 flex gap-3">
         <form action={deleteRecord.bind(null, app.id, record.id)}>
-            <button type="submit" className="btn btn-danger">
+          <button type="submit" className="btn btn-danger">
             Delete response
-            </button>
+          </button>
         </form>
 
-        <Link
-            href={`/apps/${app.id}/responses`}
-            className="btn btn-secondary"
-        >
-            Cancel
+        <Link href={`/apps/${app.id}/responses`} className="btn btn-secondary">
+          Cancel
         </Link>
-        </div>
+      </div>
     </div>
-    );
+  );
 }

@@ -87,9 +87,7 @@ export function readApplicationForm(formData: FormData): ApplicationFormValues {
   };
 }
 
-export type ApplicationParseResult =
-  | { ok: true; data: ApplicationData }
-  | { ok: false; errors: ApplicationFormErrors };
+export type ApplicationParseResult = { ok: true; data: ApplicationData } | { ok: false; errors: ApplicationFormErrors };
 
 export function parseApplicationForm(values: ApplicationFormValues): ApplicationParseResult {
   const errors: ApplicationFormErrors = {};
@@ -132,7 +130,13 @@ export const STARTER_SCHEMA_JSON = JSON.stringify(
     fields: [
       { name: "summary", label: "Summary", type: "text", required: true, maxLength: 120 },
       { name: "category", label: "Category", type: "select", required: true, options: ["Idea", "Problem", "Question"] },
-      { name: "details", label: "Details", type: "textarea", required: false, helpText: "Anything that would help us understand." },
+      {
+        name: "details",
+        label: "Details",
+        type: "textarea",
+        required: false,
+        helpText: "Anything that would help us understand.",
+      },
       { name: "follow_up", label: "I would like a reply", type: "boolean", required: false },
     ],
   },

@@ -1,6 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { requireUser, userFindUnique, userFindFirst, userCreate, userUpdateMany, appFindMany, membershipUpsert, membershipDeleteMany, transaction, hash } = vi.hoisted(() => ({
+const {
+  requireUser,
+  userFindUnique,
+  userFindFirst,
+  userCreate,
+  userUpdateMany,
+  appFindMany,
+  membershipUpsert,
+  membershipDeleteMany,
+  transaction,
+  hash,
+} = vi.hoisted(() => ({
   requireUser: vi.fn(),
   userFindUnique: vi.fn(),
   userFindFirst: vi.fn(),
@@ -15,7 +26,11 @@ const { requireUser, userFindUnique, userFindFirst, userCreate, userUpdateMany, 
 
 vi.mock("@/lib/session", () => ({ requireUser }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
-vi.mock("next/navigation", () => ({ redirect: vi.fn((url: string) => { throw new Error(`REDIRECT ${url}`); }) }));
+vi.mock("next/navigation", () => ({
+  redirect: vi.fn((url: string) => {
+    throw new Error(`REDIRECT ${url}`);
+  }),
+}));
 vi.mock("bcryptjs", () => ({ default: { hash } }));
 vi.mock("@/lib/db", () => ({
   db: {
@@ -51,17 +66,27 @@ describe("createEndUser", () => {
 
   it("refuses a duplicate email", async () => {
     userFindUnique.mockResolvedValue({ id: "someone" });
-    const result = await createEndUser({}, form({ name: "Dana", email: "dana@x.com", temporaryPassword: "long-enough-password" }));
+    const result = await createEndUser(
+      {},
+      form({ name: "Dana", email: "dana@x.com", temporaryPassword: "long-enough-password" }),
+    );
     expect(result.error).toMatch(/already exists/);
     expect(userCreate).not.toHaveBeenCalled();
   });
 
   it("creates an end user managed by the analyst with a hashed password", async () => {
-    await expect(createEndUser({}, form({ name: "Dana", email: "Dana@X.com", temporaryPassword: "long-enough-password" }))).rejects.toThrow("REDIRECT /users?created=Dana");
+    await expect(
+      createEndUser({}, form({ name: "Dana", email: "Dana@X.com", temporaryPassword: "long-enough-password" })),
+    ).rejects.toThrow("REDIRECT /users?created=Dana");
     expect(hash).toHaveBeenCalledWith("long-enough-password", 10);
     expect(userCreate).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ email: "dana@x.com", role: "END_USER", managedById: "analyst-1", passwordHash: "hashed" }),
+        data: expect.objectContaining({
+          email: "dana@x.com",
+          role: "END_USER",
+          managedById: "analyst-1",
+          passwordHash: "hashed",
+        }),
       }),
     );
   });
@@ -91,7 +116,11 @@ describe("saveUserAccess", () => {
       { id: "app-1", roles: [{ id: "role-a" }] },
       { id: "app-2", roles: [] },
     ]);
-    const result = await saveUserAccess("user-1", {}, form({ "member-app-1": "on", "role-app-1": "role-from-elsewhere" }));
+    const result = await saveUserAccess(
+      "user-1",
+      {},
+      form({ "member-app-1": "on", "role-app-1": "role-from-elsewhere" }),
+    );
 
     expect(result).toEqual({ success: true });
     expect(membershipUpsert).toHaveBeenCalledWith(
