@@ -1,4 +1,3 @@
-// Tests for the custom CSS wrapper: what it renders for a given CSS value.
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { axe } from "jest-axe";
@@ -6,7 +5,6 @@ import { AppTheme } from "./app-theme";
 
 const css = "h1 { color: #1e4fcf; }\n.btn-primary { background: #0b7a4b; }";
 
-// The <style> is not exposed to the accessibility tree, so it is found by tag.
 const styleTag = (container: HTMLElement) => container.querySelector("style");
 
 describe("AppTheme", () => {
@@ -31,10 +29,7 @@ describe("AppTheme", () => {
 
     const style = styleTag(container);
     expect(style).not.toBeNull();
-    // The scope rule is what stops the analyst's h1 rule recolouring the site
-    // header, so assert the exact wrapper, not just that the CSS is present.
     expect(style?.textContent).toBe(`@scope (.app-theme) {\n${css}\n}`);
-    // Inside the wrapper, so the scope root is an ancestor of the page content.
     expect(container.querySelector(".app-theme > style")).toBe(style);
   });
 
@@ -61,7 +56,6 @@ describe("AppTheme", () => {
 
     expect(styleTag(container)).toBeNull();
     expect(container.querySelector("script")).toBeNull();
-    // The page content still renders; only the unsafe CSS is dropped.
     expect(container).toHaveTextContent("content");
   });
 

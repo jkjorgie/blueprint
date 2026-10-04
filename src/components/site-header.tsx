@@ -1,9 +1,8 @@
+// Reads only the session token, with no database call, so it is cheap on every page.
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { HeaderNav } from "@/components/header-nav";
 
-// Reads the session token only (no database call) so it is cheap to render in
-// the root layout. Pages that need a verified user use src/lib/session.ts.
 export async function SiteHeader() {
   const session = await auth();
   const signedIn = Boolean(session?.user);

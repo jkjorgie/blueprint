@@ -1,5 +1,8 @@
 "use server";
 
+// Create, update, and delete responses. Each action checks access, the archived flag,
+// and the caller's permissions before touching the database.
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
@@ -7,8 +10,7 @@ import { requireUser } from "@/lib/session";
 import { getAppForUser } from "@/lib/apps";
 import { parseRecord, rawValues, type RecordFormState } from "@/lib/schema/record-schema";
 
-// Bound in the app page as createRecord.bind(null, app.id) so the form's
-// action has the (previousState, formData) shape useActionState expects.
+// Bound in the app page as createRecord.bind(null, app.id).
 export async function createRecord(
   applicationId: string,
   _previous: RecordFormState,
@@ -16,8 +18,6 @@ export async function createRecord(
 ): Promise<RecordFormState> {
   const user = await requireUser();
 
-  // Owner or member only. Server actions are reachable by direct POST, so this
-  // check is the real gate, not the UI.
   const app = await getAppForUser(applicationId, user);
   if (!app) {
     return { formError: "You do not have access to this application." };
@@ -43,6 +43,7 @@ export async function createRecord(
   redirect(`/apps/${app.id}?saved=1`);
 }
 
+// With the own-only scope, a member can only reach responses they submitted.
 export async function updateRecord(
   applicationId: string,
   responseId: string,
@@ -93,8 +94,6 @@ export async function deleteRecord(applicationId: string, responseId: string): P
   const user = await requireUser();
 
   const app = await getAppForUser(applicationId, user);
-  // Archived apps are read-only, and a role must grant delete. Both are
-  // refused the same way as no access.
   if (!app || app.archived || !app.permissions.delete) {
     return;
   }

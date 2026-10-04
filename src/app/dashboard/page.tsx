@@ -15,6 +15,7 @@ const roleLabels: Record<Role, string> = {
 
 type Props = { searchParams: Promise<{ deleted?: string; archived?: string }> };
 
+// Each tier sees its own section: applications, memberships, or administration.
 export default async function DashboardPage({ searchParams }: Props) {
   const [user, flags] = await Promise.all([requireUser(), searchParams]);
   const status = flags.deleted

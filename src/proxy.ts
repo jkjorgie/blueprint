@@ -1,6 +1,5 @@
-// Runs before every matched request. This is only an optimistic check on the
-// session cookie; real authorization happens in src/lib/session.ts and in each
-// server action.
+// An optimistic check on the session cookie for protected routes. Real authorization
+// happens in src/lib/session.ts and in each server action.
 import NextAuth from "next-auth";
 import { authConfig } from "@/lib/auth.config";
 

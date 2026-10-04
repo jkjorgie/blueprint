@@ -1,7 +1,5 @@
-// Data access layer for the signed-in user. Use these in server components,
-// server actions, and route handlers instead of calling auth() directly, so
-// deactivated accounts are locked out immediately even though their JWT is
-// still valid.
+// The signed-in user, re-checked against the database on every request so a deactivated
+// account is locked out even though its session token is still valid.
 import "server-only";
 import { cache } from "react";
 import { redirect } from "next/navigation";
@@ -16,7 +14,6 @@ export type CurrentUser = {
   role: Role;
 };
 
-// Cached per request, so calling it from a layout and a page costs one query.
 export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   const session = await auth();
   const id = session?.user?.id;
@@ -31,8 +28,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   return { id: user.id, email: user.email, name: user.name, role: user.role };
 });
 
-// Redirects to sign-in when there is no valid user, and to the dashboard when
-// the user's role is not in `allowed`. Returns the user otherwise.
+// Redirects to sign-in without a valid user, or to the dashboard for the wrong role.
 export async function requireUser(allowed?: Role[]): Promise<CurrentUser> {
   const user = await getCurrentUser();
   if (!user) redirect("/sign-in");

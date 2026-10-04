@@ -7,9 +7,7 @@ const initialState: SignInState = {};
 
 export function SignInForm({ callbackUrl }: { callbackUrl: string }) {
   const [state, formAction, pending] = useActionState(signInAction, initialState);
-  // Controlled so the address survives a wrong-password attempt. React resets
-  // the form after the action runs; the password clearing is fine, the email
-  // clearing is not.
+  // Controlled so the address survives a wrong-password attempt.
   const [email, setEmail] = useState("");
   const errorId = state.error ? "sign-in-error" : undefined;
 

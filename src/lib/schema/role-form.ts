@@ -1,6 +1,4 @@
-// The shape of a role as submitted from the role form: a name plus five
-// permission checkboxes. Shared by the role actions so create and update
-// validate identically.
+// The shape of a role as submitted from the role form, shared by create and update.
 import { z } from "zod";
 
 export const roleFields = z.object({
@@ -16,8 +14,6 @@ export type RoleFields = z.infer<typeof roleFields>;
 
 export type RolePermission = keyof Omit<RoleFields, "name">;
 
-// The permission flags in display order, shared by the role form's checkboxes
-// and the roles table on the application edit page.
 export const ROLE_PERMISSIONS: { key: RolePermission; label: string; hint: string }[] = [
   { key: "canView", label: "View", hint: "Open the application and see its responses." },
   { key: "canCreate", label: "Create", hint: "Submit new responses." },
@@ -30,7 +26,6 @@ export const ROLE_PERMISSIONS: { key: RolePermission; label: string; hint: strin
   },
 ];
 
-// Checkboxes arrive as "on" when checked and are absent otherwise.
 export function readRoleForm(formData: FormData) {
   return roleFields.safeParse({
     name: formData.get("name"),

@@ -19,6 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: app?.name ?? "Application" };
 }
 
+// The application itself: its generated form, wrapped in the analyst's theme.
 export default async function AppPage({ params, searchParams }: Props) {
   const [{ appId }, { saved }] = await Promise.all([params, searchParams]);
   const user = await requireUser();
@@ -29,8 +30,6 @@ export default async function AppPage({ params, searchParams }: Props) {
   const responsesHref = `/apps/${app.id}/responses`;
 
   return (
-    // The analyst's custom CSS applies inside this wrapper only. The site header
-    // and footer come from the layout, outside it, so they are never restyled.
     <AppTheme css={app.customCss}>
       <div className="container-page py-12">
         <div className="flex flex-wrap items-start justify-between gap-4">

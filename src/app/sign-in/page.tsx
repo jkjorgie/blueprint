@@ -12,9 +12,8 @@ type Props = {
 };
 
 export default async function SignInPage({ searchParams }: Props) {
-  // getCurrentUser re-checks the database, so a deactivated account with a
-  // still-valid session token is not sent back to the dashboard, which would
-  // only redirect here again.
+  // Checked against the database, so a deactivated account with a live session token
+  // sees the form instead of looping back to the dashboard.
   const user = await getCurrentUser();
   if (user) redirect("/dashboard");
 

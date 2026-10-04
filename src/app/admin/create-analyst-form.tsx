@@ -7,13 +7,11 @@ const initialState: CreateAnalystState = {};
 
 export function CreateAnalystForm() {
   const [state, formAction, pending] = useActionState(createAnalyst, initialState);
-  // Name and email are controlled so a validation error does not wipe them.
-  // React resets the form after the action runs; the password clearing is fine.
+  // Controlled so a validation error does not wipe what was typed.
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
 
-  // Clear the fields once per successful result, so the form is ready for the
-  // next analyst. Comparing against the last result seen avoids an effect.
+  // Clear the fields once per successful result, without an effect.
   const [seen, setSeen] = useState(state);
   if (state !== seen) {
     setSeen(state);
@@ -75,8 +73,6 @@ export function CreateAnalystForm() {
         <label htmlFor="analyst-password" className="label">
           Temporary password
         </label>
-        {/* No minLength: the browser would block the submit with its own
-            tooltip and the server's message would never be announced. */}
         <input
           id="analyst-password"
           name="temporaryPassword"

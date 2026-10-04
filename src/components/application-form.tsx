@@ -1,11 +1,7 @@
 "use client";
 
-// The form analysts use to create or edit an application. Shared by the new
-// and edit pages; the server action passed in decides which one it is.
-//
-// All five fields are controlled, so nothing the analyst typed is lost when
-// the action comes back with errors, and the slug can follow the name until
-// the analyst edits it by hand.
+// Create and edit form for an application. Fields are controlled so nothing typed is
+// lost on an error, and the slug follows the name until it is edited by hand.
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { slugify, type ApplicationFormState, type ApplicationFormValues } from "@/lib/schema/application-form";
@@ -19,7 +15,6 @@ type Props = {
   action: ApplicationFormAction;
   defaultValues: ApplicationFormValues;
   submitLabel: string;
-  // On the edit page the slug already exists; stop suggesting it from the name.
   slugFollowsName?: boolean;
 };
 
@@ -191,9 +186,6 @@ export function ApplicationForm({ action, defaultValues, submitLabel, slugFollow
         <label htmlFor="app-css" className="label">
           Custom CSS
         </label>
-        {/* No maxLength here on purpose. The browser would silently cut a long
-            pasted stylesheet off at the limit, leaving broken CSS and no
-            warning. Letting it through means the server's size error shows. */}
         <textarea
           id="app-css"
           name="customCss"

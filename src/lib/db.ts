@@ -1,5 +1,4 @@
-// Single Prisma client for the whole app. Next.js reloads modules in dev, so the
-// instance is cached on globalThis to avoid opening a new pool on every change.
+// One Prisma client for the app, cached across hot reloads in development.
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@/generated/prisma/client";
 

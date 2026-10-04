@@ -1,6 +1,4 @@
-// Render tests for the responses page's search. The session, the access check,
-// and the database are stubbed, so these cover what the page shows for a given
-// ?q= without a real request or the shared database.
+// The session, database, and navigation are stubbed; these tests pin down the decision logic.
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { axe } from "jest-axe";
@@ -43,7 +41,6 @@ const rows = [
   },
 ];
 
-// Builds the page for a given ?q= the way Next.js would call it.
 async function renderPage(q?: string) {
   const ui = await ResponsesPage({
     params: Promise.resolve({ appId: "app-1" }),
@@ -71,7 +68,6 @@ describe("ResponsesPage search", () => {
   it("shows every response and no status line when there is no search", async () => {
     await renderPage();
 
-    // Header row plus both data rows.
     expect(screen.getAllByRole("row")).toHaveLength(3);
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
     expect(screen.getByRole("searchbox", { name: "Search responses" })).toHaveValue("");
@@ -82,7 +78,6 @@ describe("ResponsesPage search", () => {
     await renderPage();
 
     const form = screen.getByRole("search");
-    // A plain GET with no action is what puts ?q= in the address bar.
     expect(form).toHaveAttribute("method", "get");
     expect(form).not.toHaveAttribute("action");
     expect(screen.getByRole("searchbox")).toHaveAttribute("name", "q");
@@ -93,7 +88,6 @@ describe("ResponsesPage search", () => {
 
     expect(screen.getByRole("status")).toHaveTextContent("1 response matches 'safari'");
     expect(screen.getByRole("status")).toHaveAttribute("aria-live", "polite");
-    // Header row plus the single match.
     expect(screen.getAllByRole("row")).toHaveLength(2);
     expect(screen.getByText("Save button does nothing on Safari")).toBeInTheDocument();
     expect(screen.queryByText("Typo on the welcome banner")).not.toBeInTheDocument();
@@ -118,7 +112,6 @@ describe("ResponsesPage search", () => {
 
     expect(screen.getByRole("status")).toHaveTextContent("No responses match 'banana'");
     expect(screen.queryByRole("table")).not.toBeInTheDocument();
-    // The table's own empty state would be wrong here: responses do exist.
     expect(screen.queryByText("No responses yet.")).not.toBeInTheDocument();
   });
 
@@ -141,7 +134,6 @@ describe("ResponsesPage search", () => {
 });
 
 describe("ResponsesPage sorting", () => {
-  // Any mix of ?q=, ?sort=, and ?dir=, the way Next.js would pass them.
   async function renderWith(searchParams: Record<string, string>) {
     const ui = await ResponsesPage({
       params: Promise.resolve({ appId: "app-1" }),
@@ -150,7 +142,6 @@ describe("ResponsesPage sorting", () => {
     return render(ui);
   }
 
-  // The first cell of each data row, in the order shown.
   const titles = () =>
     screen
       .getAllByRole("row")
@@ -200,7 +191,6 @@ describe("ResponsesPage sorting", () => {
   it("sorts the filtered list and keeps the search in every sort link", async () => {
     await renderWith({ q: "on", sort: "title", dir: "desc" });
 
-    // "on" matches both rows; the sort then orders them.
     expect(screen.getByRole("status")).toHaveTextContent("2 responses match 'on'");
     expect(titles()).toEqual(["Typo on the welcome banner", "Save button does nothing on Safari"]);
     expect(screen.getByRole("link", { name: "Title" })).toHaveAttribute(

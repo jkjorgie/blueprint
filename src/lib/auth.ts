@@ -1,7 +1,5 @@
-// Auth.js entry point. Import `auth`, `signIn`, and `signOut` from here.
-// Sessions are JWTs, so the token alone does not prove the account is still
-// active. Protected pages should go through src/lib/session.ts, which re-checks
-// the user in the database.
+// Auth.js with email and password. Sessions are JWTs, so pages re-check the user through
+// src/lib/session.ts rather than trusting the token alone.
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";

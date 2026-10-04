@@ -13,6 +13,7 @@ function safeCallbackUrl(value: FormDataEntryValue | null): string {
   return "/dashboard";
 }
 
+// A wrong password and a server fault get different messages; the fault is logged.
 export async function signInAction(_previous: SignInState, formData: FormData): Promise<SignInState> {
   try {
     await signIn("credentials", {
@@ -26,13 +27,10 @@ export async function signInAction(_previous: SignInState, formData: FormData): 
       return { error: "Invalid email or password." };
     }
     if (err instanceof AuthError) {
-      // Anything else from Auth.js is a server problem (missing AUTH_SECRET,
-      // database unreachable), not a bad password. Log the cause for the
-      // server logs and tell the user it is not their fault.
       console.error("[sign-in] %s: %s", err.type, err.cause?.err?.message ?? err.message);
       return { error: "Sign-in is unavailable right now. Please try again later." };
     }
-    // signIn redirects by throwing; anything else must propagate.
+    // signIn redirects by throwing, so anything that is not an AuthError must propagate.
     throw err;
   }
 }

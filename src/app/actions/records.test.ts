@@ -1,6 +1,4 @@
-// Security tests for response update/delete actions.
-// These verify that a response ID must belong to the application being accessed.
-
+// The session, database, and navigation are stubbed; these tests pin down the decision logic.
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { requireUser, getAppForUser, findFirst, update, deleteRecord } = vi.hoisted(() => ({

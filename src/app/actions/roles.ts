@@ -1,8 +1,7 @@
 "use server";
 
 // Roles are named permission bundles an analyst defines per application.
-// The edit page creates and deletes them; the role edit page changes one.
-// Every action confirms the analyst owns the application.
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
@@ -13,7 +12,6 @@ export type RoleFormState = { error?: string };
 
 const NAME_TAKEN = "This application already has a role with that name.";
 
-// Bound in the edit page as createRole.bind(null, app.id) for the add form.
 export async function createRole(
   applicationId: string,
   _previous: RoleFormState,
@@ -43,9 +41,8 @@ export async function createRole(
   redirect(`/apps/${applicationId}/edit?roleAdded=1`);
 }
 
-// Bound in the edit page as deleteRole.bind(null, app.id, role.id) and used as
-// a plain <form action>. A role still assigned to members is refused rather
-// than silently dropping those members back to the default permissions.
+// A role still assigned to members is refused rather than silently unassigning them.
+// The check is repeated in the delete itself to close the race.
 export async function deleteRole(applicationId: string, roleId: string) {
   const analyst = await requireUser(["ANALYST"]);
 
@@ -56,8 +53,6 @@ export async function deleteRole(applicationId: string, roleId: string) {
   if (!role) redirect("/dashboard");
   if (role._count.memberships > 0) redirect(`/apps/${applicationId}/edit?blocked=role`);
 
-  // The membership check is repeated in the delete itself, so a member
-  // assigned in the same instant is not quietly unassigned.
   const result = await db.appRole.deleteMany({ where: { id: role.id, memberships: { none: {} } } });
   if (result.count === 0) redirect(`/apps/${applicationId}/edit?blocked=role`);
 

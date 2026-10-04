@@ -1,15 +1,11 @@
-// The contract for an analyst-defined application.
-//
-// An analyst supplies JSON in this shape; we validate it here before it is
-// stored on Application.schema. Everything that renders a form, validates a
-// record, or builds a list view should derive from these types rather than
-// re-parsing the JSON.
+// The contract for an analyst-defined application. The JSON an analyst supplies is
+// validated here; forms, validation, and tables all derive from these types.
 import { z } from "zod";
 
 export const FIELD_TYPES = ["text", "textarea", "number", "boolean", "date", "select", "list"] as const;
 export type FieldType = (typeof FIELD_TYPES)[number];
 
-// Field names become keys in DataRecord.data, so keep them machine-friendly.
+// Field names become keys in DataRecord.data, so they stay machine-friendly.
 const fieldName = z
   .string()
   .regex(/^[a-z][a-z0-9_]*$/, "must start with a letter and use only lowercase letters, numbers, and underscores")
@@ -24,7 +20,7 @@ const baseField = z.object({
 
 const maxLength = z.number().int().positive().max(5000).optional();
 
-// The six single-value types. These are also the only types a list may hold.
+// The six single-value types, which are also the only types a list may hold.
 export const scalarFieldSchema = z.discriminatedUnion(
   "type",
   [
@@ -42,8 +38,6 @@ export const scalarFieldSchema = z.discriminatedUnion(
     }),
   ],
   {
-    // Zod's own message for an unknown type lists the allowed ones, which is
-    // fine, but a nested list deserves a plainer explanation.
     error: (issue) =>
       issue.code === "invalid_union" && isObjectWithType(issue.input, "list")
         ? "a list cannot contain another list"
@@ -55,8 +49,7 @@ function isObjectWithType(value: unknown, type: string): boolean {
   return typeof value === "object" && value !== null && (value as { type?: unknown }).type === type;
 }
 
-// A repeating group: the end user fills in the sub-fields once per item, as
-// many times as minItems and maxItems allow. Stored as an array of objects.
+// A repeating group: sub-fields filled in once per item, stored as an array of objects.
 const listField = baseField.extend({
   type: z.literal("list"),
   fields: z
@@ -101,8 +94,6 @@ export const appSchema = z
       seen.add(field.name);
 
       if (field.type !== "list") return;
-      // Sub-field names only need to be unique within their own list, since
-      // each item is its own object.
       const seenInList = new Set<string>();
       field.fields.forEach((sub, subIndex) => {
         if (seenInList.has(sub.name)) {
@@ -130,17 +121,13 @@ export type Field = z.infer<typeof fieldSchema>;
 export type ScalarField = z.infer<typeof scalarFieldSchema>;
 export type ListField = Extract<Field, { type: "list" }>;
 
-// "1 Step", "3 Steps". The item label is analyst-supplied, so the plural is
-// the simple English one.
 export function countItems(count: number, itemLabel: string): string {
   return `${count} ${count === 1 ? itemLabel : `${itemLabel}s`}`;
 }
 
 export type ParseResult = { ok: true; schema: AppSchema } | { ok: false; errors: string[] };
 
-// Validates an already-parsed JSON value. Errors are plain sentences prefixed
-// with the path that failed (for example "fields.2.options: ...") so they can be
-// shown directly to the analyst.
+// Errors come back as sentences prefixed with the failing path, ready to show the analyst.
 export function parseAppSchema(input: unknown): ParseResult {
   const result = appSchema.safeParse(input);
   if (result.success) {
@@ -153,7 +140,7 @@ export function parseAppSchema(input: unknown): ParseResult {
   return { ok: false, errors };
 }
 
-// Convenience for textarea input: handles malformed JSON before validating shape.
+// Handles malformed JSON before validating the shape.
 export function parseAppSchemaJson(text: string): ParseResult {
   let value: unknown;
   try {
@@ -165,7 +152,5 @@ export function parseAppSchemaJson(text: string): ParseResult {
   return parseAppSchema(value);
 }
 
-// Validation errors for one record, keyed by field name. The form renderer
-// displays these next to the matching control; the record validator produces
-// them. Both sides build against this type so they can be developed in parallel.
+// Validation errors for one response, keyed by field name or `${list}.${index}.${sub}`.
 export type RecordErrors = Partial<Record<string, string>>;

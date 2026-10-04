@@ -1,8 +1,8 @@
 "use server";
 
-// Analysts create, edit, publish, and unpublish their own applications.
-// Every action re-checks the role and the ownership on the server; the UI
-// hiding a button is never the gate.
+// Analysts create, edit, publish, archive, and delete their own applications.
+// Every action re-checks the role and the ownership on the server.
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
@@ -66,14 +66,13 @@ export async function updateApplication(
   redirect(`/apps/${applicationId}/edit?saved=1`);
 }
 
+// updateMany with an ownership filter cannot touch another analyst's row.
 async function setPublished(applicationId: string, published: boolean) {
   const user = await requireUser(["ANALYST"]);
   const result = await db.application.updateMany({
     where: { id: applicationId, ownerId: user.id },
     data: { published },
   });
-  // updateMany with an ownership filter is one round trip and cannot touch a
-  // row the analyst does not own. Zero rows means not theirs or not there.
   if (result.count === 0) redirect("/dashboard");
 
   revalidatePath("/dashboard");
@@ -81,8 +80,6 @@ async function setPublished(applicationId: string, published: boolean) {
   redirect(`/apps/${applicationId}/edit?${published ? "published" : "unpublished"}=1`);
 }
 
-// Bound in the edit page as publishApplication.bind(null, app.id) and used as a
-// plain <form action>, so they take no form data.
 export async function publishApplication(applicationId: string) {
   await setPublished(applicationId, true);
 }
@@ -91,9 +88,8 @@ export async function unpublishApplication(applicationId: string) {
   await setPublished(applicationId, false);
 }
 
-// Deleting is only allowed for a draft with no responses, and the whole rule
-// is expressed in the delete's own where clause, so a response arriving in
-// the same instant cannot be swept away with the app.
+// Only an unpublished application with no responses can be deleted. The rule lives in
+// the delete's own where clause, so a response arriving at the same instant is safe.
 export async function deleteApplication(applicationId: string) {
   const user = await requireUser(["ANALYST"]);
   const result = await db.application.deleteMany({
@@ -105,8 +101,7 @@ export async function deleteApplication(applicationId: string) {
   redirect("/dashboard?deleted=1");
 }
 
-// Archiving is for drafts that already have responses: the data stays, the
-// app stops accepting responses, and members no longer see it.
+// Archiving keeps the data, stops new responses, and hides the application from members.
 export async function archiveApplication(applicationId: string) {
   const user = await requireUser(["ANALYST"]);
   const result = await db.application.updateMany({
@@ -120,7 +115,7 @@ export async function archiveApplication(applicationId: string) {
   redirect("/dashboard?archived=1");
 }
 
-// Brings an archived app back as a draft.
+// Brings an archived application back as a draft.
 export async function restoreApplication(applicationId: string) {
   const user = await requireUser(["ANALYST"]);
   const result = await db.application.updateMany({

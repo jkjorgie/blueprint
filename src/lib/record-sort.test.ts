@@ -1,9 +1,7 @@
-// Unit tests for the response sort rules. Pure functions, no database.
 import { describe, expect, it } from "vitest";
 import type { AppSchema } from "@/lib/schema/app-schema";
 import { SUBMITTED, nextSort, normalizeSort, sortHref, sortRecords, type Sort } from "./record-sort";
 
-// One field of every type, so each comparison rule has something to sort.
 const schema: AppSchema = {
   title: "Mixed",
   fields: [
@@ -43,7 +41,6 @@ describe("normalizeSort", () => {
   it("rejects a missing or invalid direction", () => {
     expect(normalizeSort("title", undefined, schema)).toBeNull();
     expect(normalizeSort("title", "up", schema)).toBeNull();
-    // Case matters: only the exact values the links produce are accepted.
     expect(normalizeSort("title", "ASC", schema)).toBeNull();
   });
 
@@ -71,7 +68,6 @@ describe("sortRecords", () => {
     ];
 
     it("sorts numerically, not as text", () => {
-      // As text, "10" would sort before "9".
       expect(ids(sortRecords(schema, rows, by("count")))).toEqual(["zero", "one", "nine", "ten"]);
     });
 
@@ -178,7 +174,6 @@ describe("sortRecords", () => {
   });
 
   it("keeps the incoming order for ties", () => {
-    // Incoming order is newest first, as loaded from the database.
     const rows = [
       row("first", { severity: "High" }),
       row("second", { severity: "High" }),

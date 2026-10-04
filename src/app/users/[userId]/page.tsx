@@ -10,6 +10,7 @@ export const metadata: Metadata = { title: "Edit user" };
 
 type Props = { params: Promise<{ userId: string }> };
 
+// One end user: activation, and which applications and roles they have.
 export default async function EditUserPage({ params }: Props) {
   const [{ userId }, analyst] = await Promise.all([params, requireUser(["ANALYST"])]);
 

@@ -1,5 +1,7 @@
 "use server";
 
+// Admin-only actions for managing business analyst accounts.
+
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
@@ -11,6 +13,7 @@ export type CreateAnalystState = {
   name?: string;
 };
 
+// The role filter means this can never touch an admin or an end user.
 export async function setAnalystActive(userId: string, active: boolean) {
   await requireUser(["ADMIN"]);
 
@@ -27,6 +30,7 @@ export async function setAnalystActive(userId: string, active: boolean) {
   revalidatePath("/admin");
 }
 
+// The admin chooses the temporary password and passes it on; it is never displayed.
 export async function createAnalyst(_previous: CreateAnalystState, formData: FormData): Promise<CreateAnalystState> {
   await requireUser(["ADMIN"]);
 

@@ -5,6 +5,5 @@ import { toHaveNoViolations } from "jest-axe";
 
 expect.extend(toHaveNoViolations);
 
-// Unmount rendered components between tests. Testing Library only does this
-// automatically when a global afterEach exists, which we do not enable.
+// Testing Library only cleans up automatically when a global afterEach exists.
 afterEach(() => cleanup());

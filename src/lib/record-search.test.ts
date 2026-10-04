@@ -1,10 +1,7 @@
-// Unit tests for the response search rules. Pure functions, no database.
 import { describe, expect, it } from "vitest";
 import type { AppSchema } from "@/lib/schema/app-schema";
 import { describeMatches, normalizeQuery, searchRecords } from "./record-search";
 
-// One field of each kind the search must treat differently: two searchable
-// (text, textarea) and three that must be ignored (select, number, boolean).
 const schema: AppSchema = {
   title: "Bug Reports",
   fields: [
@@ -24,7 +21,6 @@ const typo = {
   id: "r2",
   data: { title: "Typo on the welcome banner", description: "Welcom should be Welcome.", severity: "Low" },
 };
-// No description at all, as for a response saved before that field existed.
 const sparse = { id: "r3", data: { title: "Checkout hangs", severity: "High" } };
 
 const all = [safari, typo, sparse];
@@ -42,19 +38,15 @@ describe("searchRecords", () => {
   });
 
   it("returns every row that matches, in the order given", () => {
-    // "on" appears in both r1 ("nothing on Safari") and r2 ("Typo on").
     expect(ids(searchRecords(schema, all, "on"))).toEqual(["r1", "r2"]);
   });
 
   it("ignores select, number, and boolean fields", () => {
-    // "High" is r1's and r3's severity, a select. It must not count.
     expect(searchRecords(schema, all, "high")).toEqual([]);
-    // 17 is r1's count, a number.
     expect(searchRecords(schema, all, "17")).toEqual([]);
   });
 
   it("does not match a missing value", () => {
-    // r3 has no description. The string "undefined" must not be searchable.
     expect(searchRecords(schema, all, "undefined")).toEqual([]);
   });
 

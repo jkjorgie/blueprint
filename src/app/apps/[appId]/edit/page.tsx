@@ -33,7 +33,6 @@ export const metadata: Metadata = { title: "Edit application" };
 
 const cell = "border-b border-line py-2 pr-4";
 
-// Starts from the same defaults as the AppRole columns.
 const NEW_ROLE: RoleFormValues = {
   name: "",
   canView: true,
@@ -43,11 +42,11 @@ const NEW_ROLE: RoleFormValues = {
   allResponses: false,
 };
 
+// Owner only: edit the schema and CSS, publish or archive, and manage roles.
 export default async function EditApplicationPage({ params, searchParams }: Props) {
   const [{ appId }, flags] = await Promise.all([params, searchParams]);
   const user = await requireUser(["ANALYST"]);
 
-  // Owner only. A member can use the app but never edit it.
   const app = await db.application.findFirst({
     where: { id: appId, ownerId: user.id },
     select: {

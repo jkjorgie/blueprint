@@ -1,9 +1,6 @@
 "use client";
 
-// Header navigation for signed-in users. Inline links from the `sm` breakpoint
-// up; below that a menu button that toggles a panel. The button announces its
-// state, Escape closes the panel and returns focus, and the panel closes on
-// navigation so it never lingers over a new page.
+// Signed-in navigation: inline links on wide screens, a menu button on narrow ones.
 
 import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
@@ -24,8 +21,7 @@ function linksFor(role: Role) {
 export function HeaderNav({ role }: { role: Role }) {
   const links = linksFor(role);
   const pathname = usePathname();
-  // The panel is "open for" one path. Navigating changes the path, so the
-  // panel closes on its own without an effect.
+  // The panel is open for one path, so navigating closes it without an effect.
   const [openFor, setOpenFor] = useState<string | null>(null);
   const open = openFor === pathname;
   const setOpen = (value: boolean) => setOpenFor(value ? pathname : null);

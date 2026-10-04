@@ -1,3 +1,4 @@
+// The session, database, and navigation are stubbed; these tests pin down the decision logic.
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { requireUser, appFindFirst, findFirst, create, update, deleteMany, redirect } = vi.hoisted(() => ({
