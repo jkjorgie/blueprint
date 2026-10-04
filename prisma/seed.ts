@@ -1,6 +1,5 @@
-// Seeds a local database with one account per tier plus the demo applications.
-// Run with `npm run db:seed`. Safe to re-run: everything is upserted, and
-// responses are only created for an application that has none.
+// Demo data: one account per tier and three sample applications.
+// Safe to re-run: accounts and apps are upserted, responses only added to an empty app.
 import "dotenv/config";
 import bcrypt from "bcryptjs";
 import { PrismaPg } from "@prisma/adapter-pg";
@@ -35,8 +34,6 @@ const bugReportSchema: AppSchema = {
   ],
 };
 
-// Carries the `number` type, which Bug Reports does not use, plus a `min`
-// constraint so the demo shows a numeric rule being enforced.
 const equipmentRequestSchema: AppSchema = {
   title: "Equipment Requests",
   fields: [
@@ -68,8 +65,6 @@ const equipmentRequestSchema: AppSchema = {
   ],
 };
 
-// Pairs with the above: the same six types, but exercising `max` rather than
-// `min` and mostly optional fields, so the two demo forms do not look alike.
 const eventRsvpSchema: AppSchema = {
   title: "Event RSVPs",
   fields: [
@@ -96,6 +91,7 @@ const eventRsvpSchema: AppSchema = {
   ],
 };
 
+// The password is only set on create, so re-seeding never resets a changed one.
 async function upsertUser(input: {
   email: string;
   name: string;
@@ -110,7 +106,6 @@ async function upsertUser(input: {
   });
 }
 
-// Values stored in DataRecord.data. Keys must match the schema field names.
 type ResponseData = Record<string, string | number | boolean>;
 
 type SeedRole = {
@@ -128,23 +123,14 @@ type SeedApp = {
   description: string;
   schema: AppSchema;
   responses: ResponseData[];
-  // Roles to create for the app, and which one the seeded end user gets.
-  // A member with no role can view and create their own responses; Editor
-  // and Viewer reach everyone's.
   roles?: SeedRole[];
   memberRole?: string;
 };
 
-// One application, its membership for the end user, and its sample responses.
-// Lifted out of the original inline Bug Reports block so all three demo apps
-// are created the same way. The behaviour is unchanged.
+// Upserts one application with its roles, the end user's membership, and sample responses.
 async function seedApp(analystId: string, memberId: string, app: SeedApp) {
   const application = await db.application.upsert({
-    // ownerId + slug is the unique key, so a second run updates this row
-    // rather than creating a duplicate application.
     where: { ownerId_slug: { ownerId: analystId, slug: app.slug } },
-    // Only the schema and the published flag are refreshed. Leaving name and
-    // description alone means an analyst's edits in the running app survive.
     update: { schema: app.schema, published: true },
     create: {
       ownerId: analystId,
@@ -178,9 +164,6 @@ async function seedApp(analystId: string, memberId: string, app: SeedApp) {
     create: { userId: memberId, applicationId: application.id, roleId: memberRoleId },
   });
 
-  // Responses have no natural unique key, so they cannot be upserted. Creating
-  // them only when the application has none is what stops a second run from
-  // doubling the demo data.
   const existing = await db.dataRecord.count({ where: { applicationId: application.id } });
   if (existing === 0) {
     await db.dataRecord.createMany({
@@ -307,8 +290,6 @@ async function main() {
     managedById: analyst.id,
   });
 
-  // Sequential rather than in parallel: these share one pooled connection, and
-  // a readable log matters more here than a few milliseconds.
   const seeded = [];
   for (const app of demoApps) {
     seeded.push(await seedApp(analyst.id, endUser.id, app));

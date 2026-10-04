@@ -1,5 +1,4 @@
-// The session, database, and Next.js navigation are stubbed. What these pin
-// down is the decision logic: who may do what, and what comes back to the form.
+// The session, database, and navigation are stubbed; these tests pin down the decision logic.
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { STARTER_SCHEMA_JSON } from "@/lib/schema/application-form";
 
@@ -80,7 +79,6 @@ describe("createApplication", () => {
         data: expect.objectContaining({ ownerId: "analyst-1", slug: "feedback", name: "Feedback" }),
       }),
     );
-    // No published flag in the data means the schema default (false) applies.
     expect(create.mock.calls[0][0].data.published).toBeUndefined();
   });
 });

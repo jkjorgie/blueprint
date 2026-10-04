@@ -1,7 +1,5 @@
-// Loads an application only if the given user may see it: the owner, or a
-// member of a published, unarchived app whose role allows viewing. Returns null
-// otherwise, and hands back the user's permissions so pages and actions can
-// enforce them without a second query.
+// Loads an application only if the user may see it, with their permissions attached.
+// Every app page and action starts here, so the access rule lives in one place.
 import "server-only";
 import { db } from "@/lib/db";
 import { parseAppSchema, type AppSchema } from "@/lib/schema/app-schema";
@@ -49,7 +47,7 @@ export async function getAppForUser(appId: string, user: CurrentUser): Promise<A
   const { archivedAt, members, ...rest } = app;
   const isOwner = app.ownerId === user.id;
   const permissions = permissionsFor({ isOwner, membership: members[0] ?? null });
-  // A role can withhold view. Treat that like no membership at all.
+  // A role can withhold view; treat that like no membership.
   if (!permissions.view) return null;
 
   const parsed = parseAppSchema(app.schema);

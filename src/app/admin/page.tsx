@@ -6,6 +6,7 @@ import { CreateAnalystForm } from "./create-analyst-form";
 
 export const metadata: Metadata = { title: "Administration" };
 
+// Admin console: every analyst, with a switch to deactivate or reactivate them.
 export default async function AdminPage() {
   await requireUser(["ADMIN"]);
 

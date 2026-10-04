@@ -1,4 +1,4 @@
-// Lets `expect(results).toHaveNoViolations()` type-check under vitest.
+// Lets expect(...).toHaveNoViolations() type-check under vitest.
 import "vitest";
 
 declare module "vitest" {

@@ -1,13 +1,9 @@
-// Tests for the responses table. No database: the component takes plain props,
-// so a hand-written schema and a couple of fake rows cover every rule.
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { axe } from "jest-axe";
 import type { AppSchema } from "@/lib/schema/app-schema";
 import { RecordsTable, formatValue, type RecordRow } from "./records-table";
 
-// Deliberately small, but one field of each awkward type: a plain string, a
-// boolean that needs Yes/No, and a date that needs time-zone-safe parsing.
 const schema: AppSchema = {
   title: "Bug Reports",
   fields: [
@@ -24,8 +20,6 @@ const records: RecordRow[] = [
     createdAt: new Date("2026-09-01T10:00:00"),
   },
   {
-    // Second row leaves reported_on out entirely, so the missing-value rule is
-    // exercised by a real row rather than only by the helper's unit test.
     id: "rec-2",
     data: { title: "Typo on the welcome banner", reproducible: false },
     createdAt: new Date("2026-09-03T10:00:00"),
@@ -39,8 +33,6 @@ describe("RecordsTable", () => {
     render(<RecordsTable schema={schema} records={records} appId={appId} />);
 
     const headers = screen.getAllByRole("columnheader").map((th) => th.textContent);
-    // Asserting the whole array in order, not just membership: a column that
-    // drifts out of position would still pass individual checks.
     expect(headers).toEqual(["Title", "Reproducible every time", "Reported on", "Submitted", "Actions"]);
   });
 
@@ -82,19 +74,14 @@ describe("RecordsTable", () => {
     render(<RecordsTable schema={schema} records={records} appId={appId} />);
 
     const rows = screen.getAllByRole("row");
-    // rows[0] is the header row, so the data rows start at index 1.
     const first = rows[1].querySelectorAll("td");
     const second = rows[2].querySelectorAll("td");
 
     expect(first[0].textContent).toBe("Save button does nothing on Safari");
     expect(first[1].textContent).toBe("Yes");
-    // Built the same way the component does, so this passes in any time zone
-    // while still failing if the component drops the T00:00:00 guard in a
-    // zone behind UTC.
     expect(first[2].textContent).toBe(new Date("2026-09-01T00:00:00").toLocaleDateString());
 
     expect(second[1].textContent).toBe("No");
-    // Missing value renders as a blank cell, not "undefined".
     expect(second[2].textContent).toBe("");
   });
 
@@ -136,13 +123,11 @@ describe("RecordsTable", () => {
 });
 
 describe("RecordsTable sorting", () => {
-  // A predictable href per column, so each test can see which link is which.
   const hrefFor = (field: string) => `/sort/${field}`;
 
   it("renders plain headers when sorting is not enabled", () => {
     render(<RecordsTable schema={schema} records={records} appId={appId} />);
 
-    // Only the row Edit/Delete links exist; no header is a link.
     for (const header of screen.getAllByRole("columnheader")) {
       expect(header.querySelector("a")).toBeNull();
     }
@@ -154,7 +139,6 @@ describe("RecordsTable sorting", () => {
     expect(screen.getByRole("link", { name: "Title" })).toHaveAttribute("href", "/sort/title");
     expect(screen.getByRole("link", { name: "Reported on" })).toHaveAttribute("href", "/sort/reported_on");
     expect(screen.getByRole("link", { name: "Submitted" })).toHaveAttribute("href", "/sort/submitted");
-    // Actions is not a data column, so it is never a sort link.
     expect(screen.getByRole("columnheader", { name: "Actions" }).querySelector("a")).toBeNull();
   });
 
@@ -197,7 +181,6 @@ describe("RecordsTable sorting", () => {
       <RecordsTable schema={schema} records={records} sort={{ active: { field: "title", dir: "asc" }, hrefFor }} />,
     );
 
-    // The link name stays "Title", not "Title up-pointing triangle".
     expect(screen.getByRole("link", { name: "Title" })).toBeInTheDocument();
   });
 
@@ -205,7 +188,6 @@ describe("RecordsTable sorting", () => {
     render(<RecordsTable schema={schema} records={records} sort={{ active: null, hrefFor }} />);
 
     expect(screen.getByRole("link", { name: "Title" })).toHaveAttribute("href", "/sort/title");
-    // No appId means no Actions column, but the sort links are unaffected.
     expect(screen.queryByRole("columnheader", { name: "Actions" })).not.toBeInTheDocument();
   });
 
@@ -222,8 +204,6 @@ describe("RecordsTable sorting", () => {
   });
 });
 
-// The helper carries the display rules, so it is worth pinning down directly:
-// these cases are cheaper to state here than to build a whole row for.
 describe("formatValue", () => {
   const boolean = schema.fields[1];
   const date = schema.fields[2];
@@ -232,7 +212,6 @@ describe("formatValue", () => {
   it("renders missing values as blank", () => {
     expect(formatValue(text, undefined)).toBe("");
     expect(formatValue(text, null)).toBe("");
-    // false is a real answer, not a missing one, so it must survive the check.
     expect(formatValue(boolean, false)).toBe("No");
   });
 

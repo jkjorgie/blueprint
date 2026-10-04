@@ -1,10 +1,5 @@
-// Creates the first admin account in a fresh database. Run once against
-// production, from your own machine:
-//
-//   DATABASE_URL="<prod session-pooler url>" ADMIN_EMAIL="..." ADMIN_PASSWORD="..." npm run db:bootstrap
-//
-// Safe to re-run: it updates the password if the account already exists.
-// Demo data belongs in seed.ts, not here.
+// Creates or resets the first admin account. Run once against a new database:
+//   ADMIN_EMAIL=... ADMIN_PASSWORD=... npm run db:bootstrap
 import "dotenv/config";
 import bcrypt from "bcryptjs";
 import { PrismaPg } from "@prisma/adapter-pg";

@@ -1,6 +1,4 @@
-// Dashboard section for business analysts: the applications they own.
-// Active apps first with Edit and Go-to buttons; archived apps in a collapsed
-// group at the bottom with a Restore button.
+// Dashboard section for analysts: active applications, then archived ones collapsed.
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { restoreApplication } from "@/app/actions/applications";

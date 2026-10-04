@@ -5,9 +5,6 @@ import { ChangePasswordForm } from "./change-password-form";
 export const metadata: Metadata = { title: "Account" };
 
 export default async function AccountPage() {
-  // Any signed-in role may change their own password, so no role list here.
-  // requireUser still redirects a signed-out visitor to sign-in, which makes
-  // this page safe even if the proxy matcher is ever edited.
   const user = await requireUser();
 
   return (

@@ -1,5 +1,4 @@
-// Filters an analyst's user list by name or email, case-insensitively.
-// Pure, so the rule is unit-tested without a database.
+// Filters an analyst's user list by name or email.
 export function filterUsers<T extends { name: string; email: string }>(users: T[], query: string): T[] {
   const needle = query.trim().toLowerCase();
   if (!needle) return users;

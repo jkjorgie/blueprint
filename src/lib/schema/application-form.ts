@@ -1,6 +1,4 @@
-// Validation for the analyst-facing "new application" and "edit application"
-// forms: name, slug, description, the schema as JSON text, and custom CSS.
-// Pure functions, so the rules are unit-tested without a database or a request.
+// Validation for the new and edit application forms: name, slug, description, schema JSON, and CSS.
 import { z } from "zod";
 import { parseAppSchemaJson, type AppSchema } from "./app-schema";
 
@@ -17,7 +15,6 @@ export type ApplicationFormErrors = {
   slug?: string;
   description?: string;
   customCss?: string;
-  // The schema can fail in several places at once, so it gets a list.
   schema?: string[];
 };
 
@@ -39,12 +36,10 @@ export const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 export const SLUG_MAX = 60;
 
 export const CUSTOM_CSS_MAX = 20_000;
-// "</" is the only thing refused inside custom CSS. The CSS is written into a
-// <style> tag on other users' pages, and "</" is how text inside that tag
-// could close it and start injecting HTML. Real CSS never needs it.
+// The one thing refused inside custom CSS: it could close the <style> tag and inject HTML.
 export const CSS_CLOSING_SEQUENCE = "</";
 
-// "Bug Reports!" -> "bug-reports". Used to suggest a slug from the name.
+// "Bug Reports!" becomes "bug-reports".
 export function slugify(name: string): string {
   return name
     .toLowerCase()
@@ -63,9 +58,6 @@ const fields = z.object({
     .max(SLUG_MAX, `Slug must be ${SLUG_MAX} characters or fewer.`)
     .regex(SLUG_PATTERN, "Slug can only contain lowercase letters, numbers, and single hyphens."),
   description: z.string().trim().max(300, "Description must be 300 characters or fewer."),
-  // Analysts are trusted to write whatever CSS they like, so the rules are
-  // deliberately minimal: a size cap, and the one sequence that is a security
-  // problem rather than a styling choice.
   customCss: z
     .string()
     .trim()
@@ -116,14 +108,12 @@ export function parseApplicationForm(values: ApplicationFormValues): Application
       slug: result.data.slug,
       description: result.data.description === "" ? null : result.data.description,
       schema: schema.schema,
-      // Empty means "no custom CSS", stored as null like description.
       customCss: result.data.customCss === "" ? null : result.data.customCss,
     },
   };
 }
 
-// Pre-filled into the JSON box on the new-application page so an analyst
-// starts from a working example instead of a blank textarea.
+// Pre-filled on the new-application page so analysts start from a working example.
 export const STARTER_SCHEMA_JSON = JSON.stringify(
   {
     title: "Feedback",

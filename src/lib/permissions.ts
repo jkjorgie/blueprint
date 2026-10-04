@@ -1,13 +1,8 @@
-// What a user may do inside one application.
-//
-// Owners can do everything. Members get whatever their role allows; a member
-// with no role gets the default of view and create. Everyone else gets nothing.
-// Pure functions, so the rules are unit-tested without a database.
-
+// What a user may do in one application: owners everything, members by role, and
+// members without a role view and create on their own responses.
 export type Permission = "view" | "create" | "edit" | "delete";
 
-// scope says which responses the permissions reach: only the member's own,
-// or every response in the application.
+// Whether permissions reach only the member's own responses or everyone's.
 export type Scope = "own" | "all";
 
 export type Permissions = Record<Permission, boolean> & { scope: Scope };
@@ -42,7 +37,6 @@ export function permissionsFromRole(role: RoleFlags): Permissions {
 
 export function permissionsFor(input: {
   isOwner: boolean;
-  // null when the user has no membership; role is null for a member with no role.
   membership: { role: RoleFlags | null } | null;
 }): Permissions {
   if (input.isOwner) return OWNER_PERMISSIONS;
@@ -51,7 +45,6 @@ export function permissionsFor(input: {
   return permissionsFromRole(input.membership.role);
 }
 
-// Human wording for the role builder and user management screens.
 export function describePermissions(p: Permissions): string {
   const granted = (["view", "create", "edit", "delete"] as Permission[]).filter((k) => p[k]);
   if (granted.length === 0) return "No access";

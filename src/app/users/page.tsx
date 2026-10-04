@@ -12,6 +12,7 @@ type Props = { searchParams: Promise<{ q?: string | string[]; created?: string }
 
 const cell = "border-b border-line py-2 pr-4";
 
+// Searchable table of the analyst's end users.
 export default async function UsersPage({ searchParams }: Props) {
   const [analyst, params] = await Promise.all([requireUser(["ANALYST"]), searchParams]);
   const query = normalizeQuery(params.q);

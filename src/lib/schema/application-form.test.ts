@@ -83,7 +83,6 @@ describe("custom CSS", () => {
   });
 
   it("keeps CSS that uses > and other characters HTML would escape", () => {
-    // Child combinators and quoted content are ordinary CSS. Only "</" is refused.
     const tricky = 'a > span::after { content: "<3"; }';
     const result = parseApplicationForm({ ...valid, customCss: tricky });
     expect(result.ok).toBe(true);

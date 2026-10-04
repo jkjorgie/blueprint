@@ -1,9 +1,8 @@
 "use server";
 
-// Analysts manage their own end users: create accounts, switch them on and
-// off, and decide which of the analyst's applications each one may use and
-// with which role. Every action re-checks that the analyst owns the user and
-// the applications involved, so one analyst can never reach another's users.
+// Analysts manage their own end users: create, activate, and grant application access.
+// Every action confirms the user and the applications belong to the analyst.
+
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -50,7 +49,6 @@ export async function createEndUser(_previous: UserFormState, formData: FormData
   redirect(`/users?created=${encodeURIComponent(created.name)}`);
 }
 
-// Bound as setEndUserActive.bind(null, userId, false) on a plain form.
 export async function setEndUserActive(userId: string, active: boolean) {
   const analyst = await requireUser(["ANALYST"]);
   await db.user.updateMany({
@@ -61,8 +59,8 @@ export async function setEndUserActive(userId: string, active: boolean) {
   revalidatePath(`/users/${userId}`);
 }
 
-// One form per user lists every application the analyst owns with a
-// "member" checkbox and a role select. Saving reconciles memberships to match.
+// Reconciles memberships with the submitted checkboxes in one transaction.
+// A role is only accepted if it belongs to that application.
 export async function saveUserAccess(
   userId: string,
   _previous: UserFormState,
@@ -87,7 +85,6 @@ export async function saveUserAccess(
       return db.appMembership.deleteMany({ where: { userId, applicationId: app.id } });
     }
     const requestedRole = formData.get(`role-${app.id}`);
-    // Only a role that belongs to this very application may be assigned.
     const roleId =
       typeof requestedRole === "string" && app.roles.some((r) => r.id === requestedRole) ? requestedRole : null;
     return db.appMembership.upsert({

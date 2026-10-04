@@ -15,6 +15,7 @@ type Props = {
   }>;
 };
 
+// Confirmation step before deleting one response.
 export default async function DeleteResponsePage({ params }: Props) {
   const { appId, responseId } = await params;
 
@@ -22,7 +23,6 @@ export default async function DeleteResponsePage({ params }: Props) {
   const app = await getAppForUser(appId, user);
 
   if (!app) notFound();
-  // Archived applications are read-only.
   if (app.archived) notFound();
   if (!app.permissions.delete) notFound();
 

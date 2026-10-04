@@ -83,7 +83,6 @@ describe("ApplicationForm", () => {
 
     const summary = await screen.findByRole("alert");
     expect(summary).toHaveTextContent("Please fix 1 problem");
-    // The summary link jumps to the box, and the box carries the error.
     expect(screen.getByRole("link", { name: message })).toHaveAttribute("href", "#app-css");
     const css = screen.getByRole("textbox", { name: "Custom CSS" });
     expect(css).toBeInvalid();

@@ -1,7 +1,7 @@
 "use client";
 
-// Name plus the permission checkboxes. Used by the role edit page and by the
-// add form in the Roles section of the application edit page.
+// Role name plus the permission checkboxes; shared by the add and edit forms.
+
 import { useActionState } from "react";
 import type { RoleFormState } from "@/app/actions/roles";
 import { ROLE_PERMISSIONS } from "@/lib/schema/role-form";

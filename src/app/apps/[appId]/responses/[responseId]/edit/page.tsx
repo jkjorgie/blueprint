@@ -16,6 +16,7 @@ type Props = {
   }>;
 };
 
+// The generated form, pre-filled with an existing response.
 export default async function EditResponsePage({ params }: Props) {
   const { appId, responseId } = await params;
 
@@ -23,7 +24,6 @@ export default async function EditResponsePage({ params }: Props) {
   const app = await getAppForUser(appId, user);
 
   if (!app) notFound();
-  // Archived applications are read-only.
   if (app.archived) notFound();
   if (!app.permissions.edit) notFound();
 
@@ -41,8 +41,6 @@ export default async function EditResponsePage({ params }: Props) {
 
   if (!record) notFound();
 
-  // Stored data has the same shape the form takes, list fields included, so
-  // items come back in the order they were saved.
   const defaultValues = record.data as DefaultValues;
 
   const action = updateRecord.bind(null, app.id, record.id);

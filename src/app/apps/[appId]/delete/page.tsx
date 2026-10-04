@@ -9,6 +9,7 @@ export const metadata: Metadata = { title: "Delete application" };
 
 type Props = { params: Promise<{ appId: string }> };
 
+// Confirmation step before deleting a draft application that has no responses.
 export default async function DeleteApplicationPage({ params }: Props) {
   const { appId } = await params;
   const user = await requireUser(["ANALYST"]);
@@ -18,8 +19,6 @@ export default async function DeleteApplicationPage({ params }: Props) {
     select: { id: true, name: true, published: true, _count: { select: { records: true } } },
   });
   if (!app) notFound();
-  // Same rule the action enforces; this just avoids showing a page that
-  // cannot succeed.
   if (app.published || app._count.records > 0) redirect(`/apps/${app.id}/edit?blocked=delete`);
 
   return (

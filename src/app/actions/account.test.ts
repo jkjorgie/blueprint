@@ -1,9 +1,4 @@
-// Tests for the change-password action.
-//
-// The session, the database, and bcrypt are all stubbed, so these run with no
-// .env and cannot touch the shared Supabase database. What is being pinned down
-// is the decision logic: which message comes back for which mistake, and
-// whether the row is written at all.
+// The session, database, and navigation are stubbed; these tests pin down the decision logic.
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { requireUser, findUnique, update, compare, hash } = vi.hoisted(() => ({
@@ -16,7 +11,6 @@ const { requireUser, findUnique, update, compare, hash } = vi.hoisted(() => ({
 
 vi.mock("@/lib/session", () => ({ requireUser }));
 vi.mock("@/lib/db", () => ({ db: { user: { findUnique, update } } }));
-// bcryptjs is consumed as a default import, so the mock needs a default key.
 vi.mock("bcryptjs", () => ({ default: { compare, hash } }));
 
 import { changePassword } from "./account";
@@ -45,7 +39,6 @@ describe("changePassword", () => {
     const result = await changePassword({}, form({ next: "short123" }));
 
     expect(result.error).toMatch(/12 characters/);
-    // Nothing is written, and the stored hash is never even read.
     expect(update).not.toHaveBeenCalled();
   });
 
@@ -69,8 +62,6 @@ describe("changePassword", () => {
     const result = await changePassword({}, form({}));
 
     expect(result.error).toBe("Current password is incorrect.");
-    // The important half of this test: a wrong current password must not
-    // leave the account with a new one.
     expect(update).not.toHaveBeenCalled();
   });
 
@@ -88,7 +79,6 @@ describe("changePassword", () => {
 
   it("acts on the session user, never on a value from the form", async () => {
     const data = form({});
-    // A crafted request trying to aim the update at another account.
     data.set("userId", "someone-else");
 
     await changePassword({}, data);

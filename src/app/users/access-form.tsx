@@ -1,7 +1,7 @@
 "use client";
 
-// One user's access to each of the analyst's applications: a member checkbox
-// and a role select per application, saved together.
+// One member checkbox and role select per application, saved together.
+
 import { useActionState } from "react";
 import { saveUserAccess, type UserFormState } from "@/app/actions/users";
 

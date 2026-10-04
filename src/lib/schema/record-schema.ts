@@ -1,24 +1,18 @@
-// Validates one submitted record against an application's schema.
-//
-// Form data arrives as strings (checkboxes as "on" or missing). Each field's
-// Zod schema first normalizes that raw value, then checks it, so the same code
-// works for HTML forms today and CSV import later via validateRecord().
+// Validates a submitted response against an application's schema. Form values arrive as
+// strings, so each field's Zod schema normalizes the raw value and then checks it.
 import { z } from "zod";
 import { countItems, type AppSchema, type ListField, type RecordErrors, type ScalarField } from "./app-schema";
 
 export type ScalarValue = string | number | boolean;
-// One filled-in item of a list field, keyed by sub-field name.
 export type ListItem = Record<string, ScalarValue>;
 export type RecordValue = ScalarValue | ListItem[];
 export type RecordData = Record<string, RecordValue>;
 
 export type RecordResult = { ok: true; data: RecordData } | { ok: false; errors: RecordErrors };
 
-// What a schema-driven form's server action returns to the form.
 export type RecordFormState = {
   errors?: RecordErrors;
   formError?: string;
-  // The raw submission, echoed back so the form keeps what the user typed.
   values?: Record<string, string>;
 };
 
@@ -29,7 +23,7 @@ function isRealDate(value: string): boolean {
   return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
 }
 
-// Empty or whitespace-only strings count as "not provided".
+// Empty or whitespace-only strings count as not provided.
 function normalizeText(value: unknown): string | undefined {
   if (typeof value !== "string") return value === undefined || value === null ? undefined : String(value);
   const trimmed = value.trim();
@@ -41,7 +35,6 @@ function normalizeNumber(value: unknown): number | string | undefined {
   const text = normalizeText(value);
   if (text === undefined) return undefined;
   const parsed = Number(text);
-  // Hand the original text to z.number() so it reports "must be a number".
   return Number.isNaN(parsed) ? text : parsed;
 }
 
@@ -53,6 +46,7 @@ function requiredOr(field: ScalarField, invalid: string) {
   return (issue: { input: unknown }) => (issue.input === undefined ? `${field.label} is required` : invalid);
 }
 
+// The Zod schema for one scalar field, built from its type and options.
 function fieldSchema(field: ScalarField): z.ZodType {
   const label = field.label;
 
@@ -74,7 +68,6 @@ function fieldSchema(field: ScalarField): z.ZodType {
     }
 
     case "boolean": {
-      // A required checkbox means it must be checked, like agreeing to terms.
       const base = field.required ? z.literal(true, { error: `${label} must be checked` }) : z.boolean();
       return z.preprocess(normalizeBoolean, base);
     }
@@ -95,8 +88,6 @@ function fieldSchema(field: ScalarField): z.ZodType {
   }
 }
 
-// A row counts as empty, and is dropped, when no sub-field has a value. An
-// unchecked checkbox is empty too, since that is how an untouched row arrives.
 function isEmptyRow(field: ListField, row: Record<string, unknown>): boolean {
   return field.fields.every((sub) =>
     sub.type === "boolean" ? !normalizeBoolean(row[sub.name]) : normalizeText(row[sub.name]) === undefined,
@@ -111,12 +102,8 @@ function withoutUndefined(row: Record<string, unknown>): ListItem {
   return item;
 }
 
-// A list arrives as an array of raw rows. Each row is checked with the same
-// per-type rules as a top-level field. Row issues keep the row's position in
-// the incoming array, so `steps.2.action` points at the third row the form
-// sent even when an empty row before it is dropped. Count rules apply to the
-// non-empty rows, valid or not, so one bad row is not also reported as a
-// missing one. They are reported against the list's own name.
+// A list is an array of rows, each checked with the same rules as a top-level field.
+// Empty rows are dropped; count rules are reported against the list's own name.
 function listSchema(field: ListField): z.ZodType {
   const rowSchema = z.object(Object.fromEntries(field.fields.map((sub) => [sub.name, fieldSchema(sub)])));
 
@@ -156,7 +143,6 @@ function listSchema(field: ListField): z.ZodType {
       });
     }
 
-    // No items is stored as no value, the same as any other empty optional.
     return items.length === 0 ? undefined : items;
   });
 }
@@ -170,19 +156,14 @@ export function buildRecordSchema(schema: AppSchema) {
   );
 }
 
-// Validates a plain object of raw values (strings from a form, or anything
-// from another source). Returns typed data with optional empties removed.
+// Validates raw values from any source and returns typed data, or errors keyed by field.
 export function validateRecord(schema: AppSchema, input: Record<string, unknown>): RecordResult {
   const result = buildRecordSchema(schema).safeParse(input);
 
   if (!result.success) {
     const errors: RecordErrors = {};
     for (const issue of result.error.issues) {
-      // A top-level field's issue path is just its name. A list row's is
-      // [list, index, sub], which becomes the "steps.0.action" key the form
-      // names that control with.
       const name = issue.path.map(String).join(".");
-      // Keep only the first problem per field; one message is enough to act on.
       if (name && !errors[name]) errors[name] = issue.message;
     }
     return { ok: false, errors };
@@ -195,7 +176,6 @@ export function validateRecord(schema: AppSchema, input: Record<string, unknown>
   return { ok: true, data };
 }
 
-// The raw text of every field in a submission, for echoing back into a form.
 export function rawValues(schema: AppSchema, formData: FormData): Record<string, string> {
   const values: Record<string, string> = {};
   for (const field of schema.fields) {
@@ -205,15 +185,12 @@ export function rawValues(schema: AppSchema, formData: FormData): Record<string,
   return values;
 }
 
-// A list's sub-controls are named `${list}.${index}.${sub}`. Collects the rows
-// present in a submission in ascending index order, so gaps left by rows
-// removed in the browser (0, 2, 5) become a dense array (0, 1, 2).
+// Collects a list's rows from `${list}.${index}.${sub}` names in index order, closing any gaps.
 function readListRows(field: ListField, formData: FormData): Record<string, unknown>[] {
   const subNames = new Set(field.fields.map((sub) => sub.name));
   const indices = new Set<number>();
   for (const key of formData.keys()) {
     const [list, index, sub, ...rest] = key.split(".");
-    // A canonical whole number only, so "01" and "1" cannot name the same row twice.
     if (list === field.name && rest.length === 0 && subNames.has(sub) && /^(0|[1-9]\d*)$/.test(index)) {
       indices.add(Number(index));
     }
