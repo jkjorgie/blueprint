@@ -5,7 +5,7 @@
 // Code says "record" to match the DataRecord model; anything a person reads says "response".
 import Link from "next/link";
 import type { ReactNode } from "react";
-import type { AppSchema, Field } from "@/lib/schema/app-schema";
+import { countItems, type AppSchema, type Field, type ListField } from "@/lib/schema/app-schema";
 import { SUBMITTED, type Sort } from "@/lib/record-sort";
 
 // DataRecord.data is JSONB, so Prisma types it loosely. The page casts each
@@ -25,6 +25,12 @@ export function formatValue(field: Field, value: unknown): string {
 
   if (field.type === "boolean") return value ? "Yes" : "No";
 
+  // The item count, as the list cell's summary shows it.
+  if (field.type === "list") {
+    const count = listItems(value).length;
+    return count === 0 ? "" : countItems(count, field.itemLabel);
+  }
+
   if (field.type === "date") {
     const text = String(value);
     // Stored as YYYY-MM-DD. new Date("2026-09-03") parses that as midnight UTC,
@@ -38,6 +44,38 @@ export function formatValue(field: Field, value: unknown): string {
   }
 
   return String(value);
+}
+
+// The usable items of a stored list. Anything that is not an object is skipped
+// rather than breaking the cell.
+function listItems(value: unknown): Record<string, unknown>[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is Record<string, unknown> => item !== null && typeof item === "object");
+}
+
+// A list cell: the count, expanding to one line per item. A native <details>
+// keeps the row short and needs no script to open.
+function ListCell({ field, value }: { field: ListField; value: unknown }) {
+  const items = listItems(value);
+  if (items.length === 0) return null;
+
+  return (
+    <details>
+      <summary className="cursor-pointer">{formatValue(field, value)}</summary>
+      <ol className="mt-1 list-decimal space-y-1 pl-5">
+        {items.map((item, index) => (
+          <li key={index}>
+            {field.fields
+              .map((sub) => [sub.label, formatValue(sub, item[sub.name])] as const)
+              // A blank sub-field is left out so the line stays short.
+              .filter(([, text]) => text !== "")
+              .map(([label, text]) => `${label}: ${text}`)
+              .join("; ")}
+          </li>
+        ))}
+      </ol>
+    </details>
+  );
 }
 
 const cell = "border-b border-line py-2 pr-4";
@@ -142,7 +180,11 @@ export function RecordsTable({
                     a removed field is ignored rather than shifting the row. */}
                 {schema.fields.map((field) => (
                   <td key={field.name} className={cell}>
-                    {formatValue(field, data[field.name])}
+                    {field.type === "list" ? (
+                      <ListCell field={field} value={data[field.name]} />
+                    ) : (
+                      formatValue(field, data[field.name])
+                    )}
                   </td>
                 ))}
                 <td className={cell}>{record.createdAt.toLocaleDateString()}</td>

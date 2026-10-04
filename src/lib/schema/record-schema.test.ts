@@ -121,3 +121,149 @@ describe("parseRecord and rawValues", () => {
     expect(rawValues(schema, fd)).toEqual({ title: "  Hello ", qty: "abc" });
   });
 });
+
+describe("list fields", () => {
+  const listSchema: AppSchema = {
+    title: "Bugs",
+    fields: [
+      { name: "title", label: "Title", type: "text", required: true },
+      {
+        name: "steps",
+        label: "Steps",
+        type: "list",
+        required: true,
+        itemLabel: "Step",
+        minItems: 0,
+        maxItems: 3,
+        fields: [
+          { name: "action", label: "What you did", type: "text", required: true },
+          { name: "minutes", label: "Minutes", type: "number", required: false },
+          { name: "blocking", label: "Blocking", type: "boolean", required: false },
+        ],
+      },
+    ],
+  };
+
+  it("parses rows from FormData with each sub-field typed like a top-level field", () => {
+    const fd = form({
+      title: "Crash",
+      "steps.0.action": " Open the app ",
+      "steps.0.minutes": "2",
+      "steps.0.blocking": "on",
+      "steps.1.action": "Tap save",
+      "steps.1.minutes": "",
+    });
+    expect(parseRecord(listSchema, fd)).toEqual({
+      ok: true,
+      data: {
+        title: "Crash",
+        steps: [
+          { action: "Open the app", minutes: 2, blocking: true },
+          { action: "Tap save", blocking: false },
+        ],
+      },
+    });
+  });
+
+  it("re-indexes sparse rows densely, in ascending order", () => {
+    const fd = form({
+      title: "Crash",
+      "steps.5.action": "third",
+      "steps.0.action": "first",
+      "steps.2.action": "second",
+    });
+    const result = parseRecord(listSchema, fd);
+    expect(result.ok && result.data.steps).toEqual([
+      { action: "first", blocking: false },
+      { action: "second", blocking: false },
+      { action: "third", blocking: false },
+    ]);
+  });
+
+  it("ignores keys that are not a known sub-field at a whole-number index", () => {
+    const fd = form({ title: "Crash", "steps.0.action": "first", "steps.01.action": "x", "steps.1.hacker": "x" });
+    const result = parseRecord(listSchema, fd);
+    expect(result.ok && result.data.steps).toEqual([{ action: "first", blocking: false }]);
+  });
+
+  it("drops rows where every sub-field is empty", () => {
+    const fd = form({ title: "Crash", "steps.0.action": "  ", "steps.0.minutes": "", "steps.1.action": "kept" });
+    const result = parseRecord(listSchema, fd);
+    expect(result.ok && result.data.steps).toEqual([{ action: "kept", blocking: false }]);
+  });
+
+  it("keys row errors by list, dense index, and sub-field", () => {
+    const fd = form({
+      title: "Crash",
+      "steps.0.action": "fine",
+      "steps.4.minutes": "abc",
+      "steps.7.minutes": "3",
+    });
+    expect(parseRecord(listSchema, fd)).toEqual({
+      ok: false,
+      errors: {
+        "steps.1.action": "What you did is required",
+        "steps.1.minutes": "Minutes must be a number",
+        "steps.2.action": "What you did is required",
+      },
+    });
+  });
+
+  it("enforces required on the list itself", () => {
+    expect(parseRecord(listSchema, form({ title: "Crash", "steps.0.action": "" }))).toEqual({
+      ok: false,
+      errors: { steps: "Steps is required" },
+    });
+  });
+
+  it("does not also call a list missing when its only row has an error", () => {
+    expect(parseRecord(listSchema, form({ title: "Crash", "steps.0.minutes": "2" }))).toEqual({
+      ok: false,
+      errors: { "steps.0.action": "What you did is required" },
+    });
+  });
+
+  it("enforces minItems and maxItems against the rows that are kept", () => {
+    const limited: AppSchema = {
+      ...listSchema,
+      fields: [{ ...(listSchema.fields[1] as Extract<AppSchema["fields"][number], { type: "list" }>), minItems: 2 }],
+    };
+    expect(validateRecord(limited, { steps: [{ action: "one" }, { action: "" }] })).toEqual({
+      ok: false,
+      errors: { steps: "Steps needs at least 2 Steps" },
+    });
+    const four = [1, 2, 3, 4].map((n) => ({ action: `step ${n}` }));
+    expect(validateRecord(limited, { steps: four })).toEqual({
+      ok: false,
+      errors: { steps: "Steps can have at most 3 Steps" },
+    });
+  });
+
+  it("validateRecord accepts an array directly", () => {
+    const result = validateRecord(listSchema, {
+      title: "Crash",
+      steps: [{ action: "Open", minutes: 5, blocking: true }, { action: "" }],
+    });
+    expect(result).toEqual({
+      ok: true,
+      data: { title: "Crash", steps: [{ action: "Open", minutes: 5, blocking: true }] },
+    });
+  });
+
+  it("rejects a list value that is not an array", () => {
+    expect(validateRecord(listSchema, { title: "Crash", steps: "nope" })).toEqual({
+      ok: false,
+      errors: { steps: "Steps must be a list" },
+    });
+  });
+
+  it("leaves an empty optional list out of the data", () => {
+    const optional: AppSchema = {
+      ...listSchema,
+      fields: [
+        { ...(listSchema.fields[1] as Extract<AppSchema["fields"][number], { type: "list" }>), required: false },
+      ],
+    };
+    expect(validateRecord(optional, { steps: [] })).toEqual({ ok: true, data: {} });
+  });
+});

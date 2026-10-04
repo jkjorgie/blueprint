@@ -44,7 +44,8 @@ type Kind = "number" | "ordinal" | "text";
 function kindOf(field: Field | null): Kind {
   // null is the Submitted column, compared as a timestamp.
   if (field === null) return "number";
-  if (field.type === "number" || field.type === "boolean") return "number";
+  // A list sorts by how many items it has.
+  if (field.type === "number" || field.type === "boolean" || field.type === "list") return "number";
   // YYYY-MM-DD strings are already chronological under plain comparison.
   if (field.type === "date") return "ordinal";
   return "text";
@@ -71,6 +72,9 @@ function keyFor(field: Field | null, record: { data: unknown; createdAt: Date })
     case "boolean":
       // false before true.
       return typeof value === "boolean" ? (value ? 1 : 0) : null;
+    case "list":
+      // No items is a blank cell, so it sorts with the missing values.
+      return Array.isArray(value) && value.length > 0 ? value.length : null;
     default: {
       // date, text, textarea, select. An empty string is a blank cell, so it
       // is treated as missing rather than sorting ahead of "a".

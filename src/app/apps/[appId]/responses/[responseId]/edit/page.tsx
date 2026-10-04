@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/session";
 import { getAppForUser } from "@/lib/apps";
-import { SchemaForm } from "@/components/schema-form/schema-form";
+import { SchemaForm, type DefaultValues } from "@/components/schema-form/schema-form";
 import { updateRecord } from "@/app/actions/records";
 
 export const metadata: Metadata = { title: "Edit response" };
@@ -15,8 +15,6 @@ type Props = {
     responseId: string;
   }>;
 };
-
-type DefaultValues = Record<string, string | number | boolean | undefined>;
 
 export default async function EditResponsePage({ params }: Props) {
   const { appId, responseId } = await params;
@@ -43,6 +41,8 @@ export default async function EditResponsePage({ params }: Props) {
 
   if (!record) notFound();
 
+  // Stored data has the same shape the form takes, list fields included, so
+  // items come back in the order they were saved.
   const defaultValues = record.data as DefaultValues;
 
   const action = updateRecord.bind(null, app.id, record.id);

@@ -4,9 +4,12 @@
 // Zod schema first normalizes that raw value, then checks it, so the same code
 // works for HTML forms today and CSV import later via validateRecord().
 import { z } from "zod";
-import type { AppSchema, Field, RecordErrors } from "./app-schema";
+import { countItems, type AppSchema, type ListField, type RecordErrors, type ScalarField } from "./app-schema";
 
-export type RecordValue = string | number | boolean;
+export type ScalarValue = string | number | boolean;
+// One filled-in item of a list field, keyed by sub-field name.
+export type ListItem = Record<string, ScalarValue>;
+export type RecordValue = ScalarValue | ListItem[];
 export type RecordData = Record<string, RecordValue>;
 
 export type RecordResult = { ok: true; data: RecordData } | { ok: false; errors: RecordErrors };
@@ -46,11 +49,11 @@ function normalizeBoolean(value: unknown): boolean {
   return value === true || value === "on" || value === "true";
 }
 
-function requiredOr(field: Field, invalid: string) {
+function requiredOr(field: ScalarField, invalid: string) {
   return (issue: { input: unknown }) => (issue.input === undefined ? `${field.label} is required` : invalid);
 }
 
-function fieldSchema(field: Field): z.ZodType {
+function fieldSchema(field: ScalarField): z.ZodType {
   const label = field.label;
 
   switch (field.type) {
@@ -92,9 +95,79 @@ function fieldSchema(field: Field): z.ZodType {
   }
 }
 
+// A row counts as empty, and is dropped, when no sub-field has a value. An
+// unchecked checkbox is empty too, since that is how an untouched row arrives.
+function isEmptyRow(field: ListField, row: Record<string, unknown>): boolean {
+  return field.fields.every((sub) =>
+    sub.type === "boolean" ? !normalizeBoolean(row[sub.name]) : normalizeText(row[sub.name]) === undefined,
+  );
+}
+
+function withoutUndefined(row: Record<string, unknown>): ListItem {
+  const item: ListItem = {};
+  for (const [key, value] of Object.entries(row)) {
+    if (value !== undefined) item[key] = value as ScalarValue;
+  }
+  return item;
+}
+
+// A list arrives as an array of raw rows. Each row is checked with the same
+// per-type rules as a top-level field. Row issues keep the row's position in
+// the incoming array, so `steps.2.action` points at the third row the form
+// sent even when an empty row before it is dropped. Count rules apply to the
+// non-empty rows, valid or not, so one bad row is not also reported as a
+// missing one. They are reported against the list's own name.
+function listSchema(field: ListField): z.ZodType {
+  const rowSchema = z.object(Object.fromEntries(field.fields.map((sub) => [sub.name, fieldSchema(sub)])));
+
+  return z.unknown().transform((value, ctx) => {
+    if (value !== undefined && value !== null && !Array.isArray(value)) {
+      ctx.addIssue({ code: "custom", message: `${field.label} must be a list` });
+      return z.NEVER;
+    }
+
+    const items: ListItem[] = [];
+    let filled = 0;
+    (value ?? []).forEach((raw: unknown, index: number) => {
+      const row = raw !== null && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+      if (isEmptyRow(field, row)) return;
+      filled += 1;
+      const result = rowSchema.safeParse(row);
+      if (result.success) {
+        items.push(withoutUndefined(result.data));
+      } else {
+        for (const issue of result.error.issues) {
+          ctx.addIssue({ code: "custom", message: issue.message, path: [index, ...issue.path] });
+        }
+      }
+    });
+
+    if (field.required && filled === 0) {
+      ctx.addIssue({ code: "custom", message: `${field.label} is required` });
+    } else if (filled < field.minItems) {
+      ctx.addIssue({
+        code: "custom",
+        message: `${field.label} needs at least ${countItems(field.minItems, field.itemLabel)}`,
+      });
+    } else if (filled > field.maxItems) {
+      ctx.addIssue({
+        code: "custom",
+        message: `${field.label} can have at most ${countItems(field.maxItems, field.itemLabel)}`,
+      });
+    }
+
+    // No items is stored as no value, the same as any other empty optional.
+    return items.length === 0 ? undefined : items;
+  });
+}
+
 // A Zod object with one entry per field. Unknown keys are dropped.
 export function buildRecordSchema(schema: AppSchema) {
-  return z.object(Object.fromEntries(schema.fields.map((field) => [field.name, fieldSchema(field)])));
+  return z.object(
+    Object.fromEntries(
+      schema.fields.map((field) => [field.name, field.type === "list" ? listSchema(field) : fieldSchema(field)]),
+    ),
+  );
 }
 
 // Validates a plain object of raw values (strings from a form, or anything
@@ -105,7 +178,10 @@ export function validateRecord(schema: AppSchema, input: Record<string, unknown>
   if (!result.success) {
     const errors: RecordErrors = {};
     for (const issue of result.error.issues) {
-      const name = String(issue.path[0] ?? "");
+      // A top-level field's issue path is just its name. A list row's is
+      // [list, index, sub], which becomes the "steps.0.action" key the form
+      // names that control with.
+      const name = issue.path.map(String).join(".");
       // Keep only the first problem per field; one message is enough to act on.
       if (name && !errors[name]) errors[name] = issue.message;
     }
@@ -129,10 +205,40 @@ export function rawValues(schema: AppSchema, formData: FormData): Record<string,
   return values;
 }
 
+// A list's sub-controls are named `${list}.${index}.${sub}`. Collects the rows
+// present in a submission in ascending index order, so gaps left by rows
+// removed in the browser (0, 2, 5) become a dense array (0, 1, 2).
+function readListRows(field: ListField, formData: FormData): Record<string, unknown>[] {
+  const subNames = new Set(field.fields.map((sub) => sub.name));
+  const indices = new Set<number>();
+  for (const key of formData.keys()) {
+    const [list, index, sub, ...rest] = key.split(".");
+    // A canonical whole number only, so "01" and "1" cannot name the same row twice.
+    if (list === field.name && rest.length === 0 && subNames.has(sub) && /^(0|[1-9]\d*)$/.test(index)) {
+      indices.add(Number(index));
+    }
+  }
+
+  return [...indices]
+    .sort((a, b) => a - b)
+    .map((index) => {
+      const row: Record<string, unknown> = {};
+      for (const sub of field.fields) {
+        const value = formData.get(`${field.name}.${index}.${sub.name}`);
+        row[sub.name] = value === null ? undefined : value;
+      }
+      return row;
+    });
+}
+
 // Validates a submitted HTML form.
 export function parseRecord(schema: AppSchema, formData: FormData): RecordResult {
   const input: Record<string, unknown> = {};
   for (const field of schema.fields) {
+    if (field.type === "list") {
+      input[field.name] = readListRows(field, formData);
+      continue;
+    }
     const value = formData.get(field.name);
     input[field.name] = value === null ? undefined : value;
   }

@@ -226,3 +226,45 @@ describe("sortHref", () => {
     expect(new URL(href, "http://x").searchParams.get("q")).toBe("save & quit");
   });
 });
+
+describe("sortRecords with a list field", () => {
+  const listSchema: AppSchema = {
+    title: "Bugs",
+    fields: [
+      {
+        name: "steps",
+        label: "Steps",
+        type: "list",
+        required: false,
+        itemLabel: "Step",
+        minItems: 0,
+        maxItems: 20,
+        fields: [{ name: "action", label: "Action", type: "text", required: true }],
+      },
+    ],
+  };
+  const items = (n: number) => Array.from({ length: n }, (_, i) => ({ action: `step ${i}` }));
+  const rows = [
+    row("none", {}),
+    row("three", { steps: items(3) }),
+    row("empty", { steps: [] }),
+    row("one", { steps: items(1) }),
+    row("junk", { steps: "lots" }),
+    row("ten", { steps: items(10) }),
+  ];
+
+  it("sorts by item count, numerically", () => {
+    expect(ids(sortRecords(listSchema, rows, by("steps")))).toEqual(["one", "three", "ten", "none", "empty", "junk"]);
+  });
+
+  it("keeps missing, empty, and unusable lists last when descending", () => {
+    expect(ids(sortRecords(listSchema, rows, by("steps", "desc")))).toEqual([
+      "ten",
+      "three",
+      "one",
+      "none",
+      "empty",
+      "junk",
+    ]);
+  });
+});

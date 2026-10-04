@@ -249,3 +249,81 @@ describe("formatValue", () => {
     expect(formatValue(text, 42)).toBe("42");
   });
 });
+
+describe("RecordsTable list columns", () => {
+  const listSchema: AppSchema = {
+    title: "Bug Reports",
+    fields: [
+      { name: "title", label: "Title", type: "text", required: true },
+      {
+        name: "steps",
+        label: "Steps to reproduce",
+        type: "list",
+        required: false,
+        itemLabel: "Step",
+        minItems: 0,
+        maxItems: 20,
+        fields: [
+          { name: "action", label: "What you did", type: "text", required: true },
+          { name: "result", label: "What happened", type: "textarea", required: false },
+          { name: "blocking", label: "Blocking", type: "boolean", required: false },
+        ],
+      },
+    ],
+  };
+
+  const listRecords: RecordRow[] = [
+    {
+      id: "rec-1",
+      data: {
+        title: "Crash on pay",
+        steps: [
+          { action: "Open the cart", result: "Cart shows", blocking: false },
+          { action: "Tap pay", blocking: true },
+          { action: "Wait", result: "Spinner forever", blocking: true },
+        ],
+      },
+      createdAt: new Date("2026-09-01T10:00:00"),
+    },
+    {
+      id: "rec-2",
+      data: { title: "One step", steps: [{ action: "Open settings", blocking: false }] },
+      createdAt: new Date("2026-09-02T10:00:00"),
+    },
+    { id: "rec-3", data: { title: "No steps" }, createdAt: new Date("2026-09-03T10:00:00") },
+  ];
+
+  const stepsCell = (rowIndex: number) => screen.getAllByRole("row")[rowIndex].querySelectorAll("td")[1];
+
+  it("summarizes the item count in a details element", () => {
+    render(<RecordsTable schema={listSchema} records={listRecords} appId={appId} />);
+
+    const summary = stepsCell(1).querySelector("details > summary");
+    expect(summary).toHaveTextContent(/^3 Steps$/);
+    expect(stepsCell(2).querySelector("summary")).toHaveTextContent(/^1 Step$/);
+  });
+
+  it("lists each item as sub-label and value pairs, leaving out blanks", () => {
+    render(<RecordsTable schema={listSchema} records={listRecords} appId={appId} />);
+
+    const lines = [...stepsCell(1).querySelectorAll("details li")].map((li) => li.textContent);
+    expect(lines).toEqual([
+      "What you did: Open the cart; What happened: Cart shows; Blocking: No",
+      "What you did: Tap pay; Blocking: Yes",
+      "What you did: Wait; What happened: Spinner forever; Blocking: Yes",
+    ]);
+  });
+
+  it("leaves the cell blank when there are no items", () => {
+    render(<RecordsTable schema={listSchema} records={listRecords} appId={appId} />);
+
+    expect(stepsCell(3)).toBeEmptyDOMElement();
+    expect(formatValue(listSchema.fields[1], [])).toBe("");
+    expect(formatValue(listSchema.fields[1], undefined)).toBe("");
+  });
+
+  it("has no detectable accessibility violations", async () => {
+    const { container } = render(<RecordsTable schema={listSchema} records={listRecords} appId={appId} />);
+    expect(await axe(container)).toHaveNoViolations();
+  });
+});
