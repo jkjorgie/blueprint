@@ -1,4 +1,6 @@
-// Lists the responses submitted to one application, with an optional search.
+// Lists the responses submitted to one application, with an optional search
+// and an optional column sort. Both live in the URL (?q=, ?sort=, ?dir=), so
+// they survive bookmarks and the back button, and apply together.
 //
 // Access is decided entirely by getAppForUser: it returns the app only for the
 // owner or a member of a published app, and null otherwise. Turning that null
@@ -11,17 +13,18 @@ import { requireUser } from "@/lib/session";
 import { getAppForUser } from "@/lib/apps";
 import { RecordsTable } from "@/components/records-table";
 import { describeMatches, normalizeQuery, searchRecords } from "@/lib/record-search";
+import { nextSort, normalizeSort, sortHref, sortRecords } from "@/lib/record-sort";
 import { AppTheme } from "@/components/app-theme";
 
 // In Next.js 16 route params and search params both arrive as Promises.
 type Props = {
   params: Promise<{ appId: string }>;
   // A repeated key (?q=a&q=b) arrives as an array, so accept both shapes.
-  searchParams: Promise<{ q?: string | string[] }>;
+  searchParams: Promise<{ q?: string | string[]; sort?: string | string[]; dir?: string | string[] }>;
 };
 
 export default async function ResponsesPage({ params, searchParams }: Props) {
-  const [{ appId }, { q }] = await Promise.all([params, searchParams]);
+  const [{ appId }, { q, sort: rawSort, dir: rawDir }] = await Promise.all([params, searchParams]);
   // Trimmed, and "" when there is no search, so a query of spaces is no search.
   const query = normalizeQuery(q);
 
@@ -40,12 +43,22 @@ export default async function ResponsesPage({ params, searchParams }: Props) {
     select: { id: true, data: true, createdAt: true },
   });
 
-  const shown = query ? searchRecords(app.schema, records, query) : records;
+  // The sort is validated against this app's own fields, so it can only be
+  // read once the app is loaded. An unknown field or bad direction is null.
+  const sort = normalizeSort(rawSort, rawDir, app.schema);
+
+  // Filter first, then sort what is left. With no sort the database order
+  // stands: newest first.
+  const filtered = query ? searchRecords(app.schema, records, query) : records;
+  const shown = sort ? sortRecords(app.schema, filtered, sort) : filtered;
   // With a search active and nothing matching, the status line says so and the
   // table is skipped. The table's own empty state reads "No responses yet.",
   // which would be wrong: responses exist, they just do not match.
   const noMatches = query !== "" && shown.length === 0;
   const responsesHref = `/apps/${app.id}/responses`;
+  // Every header link keeps the current search and either flips the active
+  // column or starts a new one ascending.
+  const hrefFor = (field: string) => sortHref(responsesHref, query, nextSort(sort, field));
 
   return (
     // Same branding as the app page. See the note there on why the header and
@@ -118,6 +131,7 @@ export default async function ResponsesPage({ params, searchParams }: Props) {
               appId={app.archived || !(app.permissions.edit || app.permissions.delete) ? undefined : app.id}
               canEdit={app.permissions.edit}
               canDelete={app.permissions.delete}
+              sort={{ active: sort, hrefFor }}
             />
           </div>
         )}

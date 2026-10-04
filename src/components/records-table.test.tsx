@@ -143,6 +143,93 @@ describe("RecordsTable", () => {
   });
 });
 
+describe("RecordsTable sorting", () => {
+  // A predictable href per column, so each test can see which link is which.
+  const hrefFor = (field: string) => `/sort/${field}`;
+
+  it("renders plain headers when sorting is not enabled", () => {
+    render(<RecordsTable schema={schema} records={records} appId={appId} />);
+
+    // Only the row Edit/Delete links exist; no header is a link.
+    for (const header of screen.getAllByRole("columnheader")) {
+      expect(header.querySelector("a")).toBeNull();
+    }
+  });
+
+  it("turns every field header and Submitted into a sort link", () => {
+    render(<RecordsTable schema={schema} records={records} appId={appId} sort={{ active: null, hrefFor }} />);
+
+    expect(screen.getByRole("link", { name: "Title" })).toHaveAttribute("href", "/sort/title");
+    expect(screen.getByRole("link", { name: "Reported on" })).toHaveAttribute("href", "/sort/reported_on");
+    expect(screen.getByRole("link", { name: "Submitted" })).toHaveAttribute("href", "/sort/submitted");
+    // Actions is not a data column, so it is never a sort link.
+    expect(screen.getByRole("columnheader", { name: "Actions" }).querySelector("a")).toBeNull();
+  });
+
+  it("marks only the active column with aria-sort and an arrow", () => {
+    render(
+      <RecordsTable
+        schema={schema}
+        records={records}
+        appId={appId}
+        sort={{ active: { field: "title", dir: "asc" }, hrefFor }}
+      />,
+    );
+
+    const active = screen.getByRole("columnheader", { name: /Title/ });
+    expect(active).toHaveAttribute("aria-sort", "ascending");
+    expect(active).toHaveTextContent("▲");
+
+    const inactive = screen.getByRole("columnheader", { name: /Reported on/ });
+    expect(inactive).not.toHaveAttribute("aria-sort");
+    expect(inactive).not.toHaveTextContent(/[▲▼]/);
+  });
+
+  it("shows a down arrow and descending for a descending sort", () => {
+    render(
+      <RecordsTable
+        schema={schema}
+        records={records}
+        appId={appId}
+        sort={{ active: { field: "submitted", dir: "desc" }, hrefFor }}
+      />,
+    );
+
+    const active = screen.getByRole("columnheader", { name: /Submitted/ });
+    expect(active).toHaveAttribute("aria-sort", "descending");
+    expect(active).toHaveTextContent("▼");
+  });
+
+  it("hides the arrow from screen readers, which hear aria-sort instead", () => {
+    render(
+      <RecordsTable schema={schema} records={records} sort={{ active: { field: "title", dir: "asc" }, hrefFor }} />,
+    );
+
+    // The link name stays "Title", not "Title up-pointing triangle".
+    expect(screen.getByRole("link", { name: "Title" })).toBeInTheDocument();
+  });
+
+  it("still sorts without appId, as for an archived application", () => {
+    render(<RecordsTable schema={schema} records={records} sort={{ active: null, hrefFor }} />);
+
+    expect(screen.getByRole("link", { name: "Title" })).toHaveAttribute("href", "/sort/title");
+    // No appId means no Actions column, but the sort links are unaffected.
+    expect(screen.queryByRole("columnheader", { name: "Actions" })).not.toBeInTheDocument();
+  });
+
+  it("has no detectable accessibility violations when sorted", async () => {
+    const { container } = render(
+      <RecordsTable
+        schema={schema}
+        records={records}
+        appId={appId}
+        sort={{ active: { field: "reported_on", dir: "desc" }, hrefFor }}
+      />,
+    );
+    expect(await axe(container)).toHaveNoViolations();
+  });
+});
+
 // The helper carries the display rules, so it is worth pinning down directly:
 // these cases are cheaper to state here than to build a whole row for.
 describe("formatValue", () => {
