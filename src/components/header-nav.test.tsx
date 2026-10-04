@@ -52,4 +52,15 @@ describe("HeaderNav", () => {
     render(<HeaderNav role="END_USER" />);
     expect(screen.queryByRole("link", { name: "Users" })).not.toBeInTheDocument();
   });
+
+  it("shows the Admin link to administrators only", () => {
+    render(<HeaderNav role="ADMIN" />);
+    expect(screen.getAllByRole("link", { name: "Admin" }).length).toBeGreaterThan(0);
+    expect(screen.queryByRole("link", { name: "Users" })).not.toBeInTheDocument();
+  });
+
+  it("hides the Admin link from analysts", () => {
+    render(<HeaderNav role="ANALYST" />);
+    expect(screen.queryByRole("link", { name: "Admin" })).not.toBeInTheDocument();
+  });
 });
