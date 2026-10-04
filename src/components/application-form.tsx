@@ -174,8 +174,9 @@ export function ApplicationForm({ action, defaultValues, submitLabel, slugFollow
           className="input font-mono text-sm"
         />
         <p id="app-schema-hint" className="field-hint">
-          A title and a list of fields. Field types: text, textarea, number, boolean, date, select. Each field needs a
-          name (lowercase, no spaces), a label, and a type; select fields need options.
+          A title and a list of fields. Field types: text, textarea, number, boolean, date, select, list. Each field
+          needs a name (lowercase, no spaces), a label, and a type; select fields need options. A list field repeats a
+          group of sub-fields given in its own fields array, with optional itemLabel, minItems, and maxItems.
         </p>
         {errors.schema && (
           <ul id="app-schema-error" className="field-error list-disc pl-5">

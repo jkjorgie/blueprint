@@ -9,8 +9,15 @@ import type { AppSchema } from "@/lib/schema/app-schema";
 
 // Only free text is searched. Selects, numbers, dates, and booleans are left
 // out on purpose: matching "high" against a Severity dropdown, or "1" against
-// every quantity, would surprise more people than it helps.
+// every quantity, would surprise more people than it helps. The same rule
+// applies to the sub-fields inside a list.
 const SEARCHABLE_TYPES = new Set(["text", "textarea"]);
+
+function matches(value: unknown, needle: string): boolean {
+  // Missing or non-string values never match. This also stops a record
+  // saved before a field existed from matching on "undefined".
+  return typeof value === "string" && value.toLowerCase().includes(needle);
+}
 
 // Turns the raw ?q= value into the query to search for, or "" for no search.
 // A repeated key (?q=a&q=b) arrives as an array; taking the first value keeps
@@ -26,17 +33,28 @@ export function normalizeQuery(raw: string | string[] | undefined): string {
 export function searchRecords<T extends { data: unknown }>(schema: AppSchema, records: T[], query: string): T[] {
   const needle = query.toLowerCase();
   const fields = schema.fields.filter((field) => SEARCHABLE_TYPES.has(field.type));
+  const lists = schema.fields.flatMap((field) =>
+    field.type === "list"
+      ? [{ name: field.name, subs: field.fields.filter((sub) => SEARCHABLE_TYPES.has(sub.type)) }]
+      : [],
+  );
 
   return records.filter((record) => {
     // A row whose data is not an object has nothing to search.
     if (!record.data || typeof record.data !== "object") return false;
     const data = record.data as Record<string, unknown>;
 
-    return fields.some((field) => {
-      const value = data[field.name];
-      // Missing or non-string values never match. This also stops a record
-      // saved before a field existed from matching on "undefined".
-      return typeof value === "string" && value.toLowerCase().includes(needle);
+    if (fields.some((field) => matches(data[field.name], needle))) return true;
+
+    return lists.some((list) => {
+      const items = data[list.name];
+      if (!Array.isArray(items)) return false;
+      return items.some(
+        (item) =>
+          item !== null &&
+          typeof item === "object" &&
+          list.subs.some((sub) => matches((item as Record<string, unknown>)[sub.name], needle)),
+      );
     });
   });
 }

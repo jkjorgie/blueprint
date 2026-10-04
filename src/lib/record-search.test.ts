@@ -94,3 +94,53 @@ describe("describeMatches", () => {
     expect(describeMatches(3, "on")).toBe("3 responses match 'on'");
   });
 });
+
+describe("searchRecords with list fields", () => {
+  const listSchema: AppSchema = {
+    title: "Bug Reports",
+    fields: [
+      { name: "title", label: "Title", type: "text", required: true },
+      {
+        name: "steps",
+        label: "Steps",
+        type: "list",
+        required: false,
+        itemLabel: "Step",
+        minItems: 0,
+        maxItems: 20,
+        fields: [
+          { name: "action", label: "What you did", type: "text", required: true },
+          { name: "result", label: "What happened", type: "textarea", required: false },
+          { name: "screen", label: "Screen", type: "select", required: false, options: ["Checkout", "Profile"] },
+        ],
+      },
+    ],
+  };
+
+  const withSteps = {
+    id: "s1",
+    data: {
+      title: "Crash",
+      steps: [
+        { action: "Open the cart", screen: "Checkout" },
+        { action: "Tap pay", result: "The spinner never stops" },
+      ],
+    },
+  };
+  const noSteps = { id: "s2", data: { title: "Typo" } };
+  const badSteps = { id: "s3", data: { title: "Old", steps: "spinner" } };
+  const rows = [withSteps, noSteps, badSteps];
+
+  it("matches text and textarea sub-fields inside any item, ignoring case", () => {
+    expect(ids(searchRecords(listSchema, rows, "CART"))).toEqual(["s1"]);
+    expect(ids(searchRecords(listSchema, rows, "spinner"))).toEqual(["s1"]);
+  });
+
+  it("ignores select sub-fields, as it does at the top level", () => {
+    expect(ids(searchRecords(listSchema, rows, "checkout"))).toEqual([]);
+  });
+
+  it("still matches top-level fields alongside lists", () => {
+    expect(ids(searchRecords(listSchema, rows, "typo"))).toEqual(["s2"]);
+  });
+});

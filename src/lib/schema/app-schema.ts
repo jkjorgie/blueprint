@@ -6,7 +6,7 @@
 // re-parsing the JSON.
 import { z } from "zod";
 
-export const FIELD_TYPES = ["text", "textarea", "number", "boolean", "date", "select"] as const;
+export const FIELD_TYPES = ["text", "textarea", "number", "boolean", "date", "select", "list"] as const;
 export type FieldType = (typeof FIELD_TYPES)[number];
 
 // Field names become keys in DataRecord.data, so keep them machine-friendly.
@@ -24,20 +24,61 @@ const baseField = z.object({
 
 const maxLength = z.number().int().positive().max(5000).optional();
 
-export const fieldSchema = z.discriminatedUnion("type", [
-  baseField.extend({ type: z.literal("text"), maxLength }),
-  baseField.extend({ type: z.literal("textarea"), maxLength }),
-  baseField.extend({ type: z.literal("number"), min: z.number().optional(), max: z.number().optional() }),
-  baseField.extend({ type: z.literal("boolean") }),
-  baseField.extend({ type: z.literal("date") }),
-  baseField.extend({
-    type: z.literal("select"),
-    options: z
-      .array(z.string().trim().min(1, "options cannot be blank"))
-      .min(1, "select fields need at least one option")
-      .max(100, "select fields can have at most 100 options"),
-  }),
-]);
+// The six single-value types. These are also the only types a list may hold.
+export const scalarFieldSchema = z.discriminatedUnion(
+  "type",
+  [
+    baseField.extend({ type: z.literal("text"), maxLength }),
+    baseField.extend({ type: z.literal("textarea"), maxLength }),
+    baseField.extend({ type: z.literal("number"), min: z.number().optional(), max: z.number().optional() }),
+    baseField.extend({ type: z.literal("boolean") }),
+    baseField.extend({ type: z.literal("date") }),
+    baseField.extend({
+      type: z.literal("select"),
+      options: z
+        .array(z.string().trim().min(1, "options cannot be blank"))
+        .min(1, "select fields need at least one option")
+        .max(100, "select fields can have at most 100 options"),
+    }),
+  ],
+  {
+    // Zod's own message for an unknown type lists the allowed ones, which is
+    // fine, but a nested list deserves a plainer explanation.
+    error: (issue) =>
+      issue.code === "invalid_union" && isObjectWithType(issue.input, "list")
+        ? "a list cannot contain another list"
+        : undefined,
+  },
+);
+
+function isObjectWithType(value: unknown, type: string): boolean {
+  return typeof value === "object" && value !== null && (value as { type?: unknown }).type === type;
+}
+
+// A repeating group: the end user fills in the sub-fields once per item, as
+// many times as minItems and maxItems allow. Stored as an array of objects.
+const listField = baseField.extend({
+  type: z.literal("list"),
+  fields: z
+    .array(scalarFieldSchema)
+    .min(1, "list fields need at least one sub-field")
+    .max(10, "list fields can have at most 10 sub-fields"),
+  itemLabel: z
+    .string()
+    .trim()
+    .min(1, "itemLabel cannot be blank")
+    .max(40, "itemLabel must be 40 characters or fewer")
+    .default("Item"),
+  minItems: z.number().int("minItems must be a whole number").min(0, "minItems cannot be negative").default(0),
+  maxItems: z
+    .number()
+    .int("maxItems must be a whole number")
+    .min(1, "maxItems must be at least 1")
+    .max(50, "maxItems must be 50 or fewer")
+    .default(20),
+});
+
+export const fieldSchema = z.discriminatedUnion("type", [...scalarFieldSchema.options, listField]);
 
 export const appSchema = z
   .object({
@@ -58,12 +99,42 @@ export const appSchema = z
         });
       }
       seen.add(field.name);
+
+      if (field.type !== "list") return;
+      // Sub-field names only need to be unique within their own list, since
+      // each item is its own object.
+      const seenInList = new Set<string>();
+      field.fields.forEach((sub, subIndex) => {
+        if (seenInList.has(sub.name)) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["fields", index, "fields", subIndex, "name"],
+            message: `duplicate field name "${sub.name}"`,
+          });
+        }
+        seenInList.add(sub.name);
+      });
+      if (field.minItems > field.maxItems) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["fields", index, "minItems"],
+          message: "minItems cannot be more than maxItems",
+        });
+      }
     });
   });
 
 export type AppSchema = z.infer<typeof appSchema>;
 export type AppSchemaInput = z.input<typeof appSchema>;
 export type Field = z.infer<typeof fieldSchema>;
+export type ScalarField = z.infer<typeof scalarFieldSchema>;
+export type ListField = Extract<Field, { type: "list" }>;
+
+// "1 Step", "3 Steps". The item label is analyst-supplied, so the plural is
+// the simple English one.
+export function countItems(count: number, itemLabel: string): string {
+  return `${count} ${count === 1 ? itemLabel : `${itemLabel}s`}`;
+}
 
 export type ParseResult = { ok: true; schema: AppSchema } | { ok: false; errors: string[] };
 
