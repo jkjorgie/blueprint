@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { act, render, screen } from "@testing-library/react";
 import { axe } from "jest-axe";
 import type { AppSchema } from "@/lib/schema/app-schema";
 import { RecordsTable, formatValue, type RecordRow } from "./records-table";
@@ -303,6 +303,92 @@ describe("RecordsTable list columns", () => {
 
   it("has no detectable accessibility violations", async () => {
     const { container } = render(<RecordsTable schema={listSchema} records={listRecords} appId={appId} />);
+    expect(await axe(container)).toHaveNoViolations();
+  });
+});
+
+describe("RecordsTable layout", () => {
+  // jsdom has no layout, so each test decides how wide the table "needs" to be.
+  let needed = 0;
+  let available = 0;
+  let observed: (() => void) | null = null;
+
+  beforeEach(() => {
+    needed = 400;
+    available = 800;
+    observed = null;
+    vi.spyOn(HTMLElement.prototype, "scrollWidth", "get").mockImplementation(function (this: HTMLElement) {
+      return this.dataset.layout === "cards" ? available : Math.max(needed, available);
+    });
+    vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockImplementation(() => available);
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        constructor(callback: () => void) {
+          observed = callback;
+        }
+        observe() {}
+        disconnect() {}
+      },
+    );
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  const frame = () => screen.getByRole("table").parentElement as HTMLElement;
+  const resizeTo = (width: number) => {
+    available = width;
+    act(() => observed?.());
+  };
+
+  it("stays a table while it fits", () => {
+    render(<RecordsTable schema={schema} records={records} appId={appId} />);
+    expect(frame()).toHaveAttribute("data-layout", "table");
+  });
+
+  it("switches to cards when the table would overflow, and back when there is room", () => {
+    needed = 900;
+    render(<RecordsTable schema={schema} records={records} appId={appId} />);
+    expect(frame()).toHaveAttribute("data-layout", "cards");
+
+    resizeTo(1000);
+    expect(frame()).toHaveAttribute("data-layout", "table");
+    resizeTo(600);
+    expect(frame()).toHaveAttribute("data-layout", "cards");
+  });
+
+  it("labels every cell for the card layout without changing its text", () => {
+    render(<RecordsTable schema={schema} records={records} appId={appId} />);
+    const cells = screen.getAllByRole("row")[1].querySelectorAll("td");
+    expect([...cells].map((td) => td.dataset.label)).toEqual([
+      "Title",
+      "Reproducible every time",
+      "Reported on",
+      "Submitted",
+      "Actions",
+    ]);
+    expect(cells[0].textContent).toBe("Save button does nothing on Safari");
+  });
+
+  it("keeps table semantics and sort links as cards", async () => {
+    needed = 900;
+    const { container } = render(
+      <RecordsTable
+        schema={schema}
+        records={records}
+        appId={appId}
+        sort={{ active: { field: "title", dir: "asc" }, hrefFor: (field) => `/sort/${field}` }}
+      />,
+    );
+    expect(frame()).toHaveAttribute("data-layout", "cards");
+    expect(screen.getByRole("table")).toHaveAccessibleName("Responses to Bug Reports");
+    expect(screen.getAllByRole("columnheader")).toHaveLength(5);
+    expect(screen.getAllByRole("cell")).toHaveLength(10);
+    expect(screen.getByRole("columnheader", { name: /Title/ })).toHaveAttribute("aria-sort", "ascending");
+    expect(screen.getByRole("link", { name: "Reported on" })).toHaveAttribute("href", "/sort/reported_on");
     expect(await axe(container)).toHaveNoViolations();
   });
 });

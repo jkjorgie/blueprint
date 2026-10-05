@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { countItems, type AppSchema, type Field, type ListField } from "@/lib/schema/app-schema";
 import { SUBMITTED, type Sort } from "@/lib/record-sort";
+import { RecordsTableFrame } from "./records-table-frame";
 
 export type RecordRow = {
   id: string;
@@ -75,6 +76,7 @@ function HeaderCell({ field, label, sort }: { field: string; label: ReactNode; s
   return (
     <th
       scope="col"
+      role="columnheader"
       aria-sort={dir === "asc" ? "ascending" : dir === "desc" ? "descending" : undefined}
       className={`${cell} font-medium`}
     >
@@ -114,32 +116,36 @@ export function RecordsTable({
     return <p className="text-ink-muted">No responses yet.</p>;
   }
 
+  // The roles repeat what the elements already mean. They are there because
+  // some browsers, Safari in particular, drop a table's semantics once its
+  // display changes, which the card layout does. data-label gives each cell
+  // its visible label in that layout.
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-left text-sm">
+    <RecordsTableFrame>
+      <table role="table" className="w-full text-left text-sm">
         <caption className="sr-only">Responses to {schema.title}</caption>
-        <thead>
-          <tr>
+        <thead role="rowgroup">
+          <tr role="row">
             {schema.fields.map((field) => (
               <HeaderCell key={field.name} field={field.name} label={field.label} sort={sort} />
             ))}
             <HeaderCell field={SUBMITTED} label="Submitted" sort={sort} />
             {appId && (
-              <th scope="col" className={`${cell} font-medium`}>
+              <th scope="col" role="columnheader" className={`${cell} font-medium`}>
                 Actions
               </th>
             )}
           </tr>
         </thead>
-        <tbody>
+        <tbody role="rowgroup">
           {records.map((record, index) => {
             const rowNumber = index + 1;
             const data = record.data as Record<string, unknown>;
 
             return (
-              <tr key={record.id}>
+              <tr key={record.id} role="row">
                 {schema.fields.map((field) => (
-                  <td key={field.name} className={cell}>
+                  <td key={field.name} role="cell" data-label={field.label} className={cell}>
                     {field.type === "list" ? (
                       <ListCell field={field} value={data[field.name]} />
                     ) : (
@@ -147,9 +153,11 @@ export function RecordsTable({
                     )}
                   </td>
                 ))}
-                <td className={cell}>{record.createdAt.toLocaleDateString()}</td>
+                <td role="cell" data-label="Submitted" className={cell}>
+                  {record.createdAt.toLocaleDateString()}
+                </td>
                 {appId && (
-                  <td className={cell}>
+                  <td role="cell" data-label="Actions" className={cell}>
                     <div className="flex gap-3">
                       {canEdit && (
                         <Link
@@ -177,6 +185,6 @@ export function RecordsTable({
           })}
         </tbody>
       </table>
-    </div>
+    </RecordsTableFrame>
   );
 }
