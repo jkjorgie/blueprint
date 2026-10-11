@@ -74,10 +74,11 @@ ADMIN_EMAIL="you@example.com" ADMIN_PASSWORD="<at least 12 characters>" npm run 
    npm run dev
    ```
 2. Open http://localhost:3000.
-3. Sign in with one of these. The password for both is `blueprint-demo`.
+3. Sign in with one of these. The password for all three is `blueprint-demo`.
 
    | Email                   | Who they are                                         |
    | ----------------------- | ---------------------------------------------------- |
+   | admin@blueprint.local   | Administrator (manages business analyst accounts)    |
    | analyst@blueprint.local | Business analyst (owns the sample "Bug Reports" app) |
    | user@blueprint.local    | End user (member of "Bug Reports")                   |
 
